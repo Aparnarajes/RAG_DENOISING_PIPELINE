@@ -8,7 +8,7 @@ RAG Denoising Pipeline" assignment brief
 (Retrieval & NLP track).
 ## Live Demo
 
-[Open Live Demo](glittering-snickerdoodle-9cee0e.netlify.app)
+[Live Demo](https://glittering-snickerdoodle-9cee0e.netlify.app/)
 
 ## Why this exists
 
