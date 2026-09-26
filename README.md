@@ -4,9 +4,11 @@ A multi-agent Retrieval-Augmented Generation system that filters, verifies, and
 reconciles retrieved documents *before* generation, and benchmarks itself
 against a naive "standard RAG" baseline on the same queries.
 
-Built for the "Project 2: RAG Denoising Pipeline" assignment brief
+RAG Denoising Pipeline" assignment brief
 (Retrieval & NLP track).
+## Live Demo
 
+[Open Live Demo](glittering-snickerdoodle-9cee0e.netlify.app)
 ## Why this exists
 
 Standard RAG passes whatever the retriever returns straight into the LLM's
