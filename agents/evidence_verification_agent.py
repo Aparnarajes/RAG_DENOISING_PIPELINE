@@ -1,123 +1,179 @@
-"""
-Evidence Verification Agent: cross-checks each document's claims and sources
-against trusted authorities and knowledge bases, and detects red-flag rhetorical
-patterns (hearsay, sensationalism, absolutist falsehoods, anonymous leaks).
-Flags unreliable evidence and drops documents below a trust threshold.
-"""
-from typing import List, Dict
+"""Evidence-grounded claim verification with explicit source-quality metadata."""
+from typing import Dict, List
 
-RED_FLAG_PATTERNS = [
-    "my cousin says",
-    "anonymous",
-    "hiding the data",
-    "already in every",
-    "completely replaced",
-    "completely stop working",
-    "never degrade",
-    "no matter how",
-    "any charger",
-    "lose 90 percent",
-    "100 times more common",
-    "prices have steadily doubled",
-    "still exceed 800 dollars",
-    "poor long term investment",
-    "regardless of usage",
-]
+from utils.evidence_analysis import (
+    MIN_VERIFIED_SOURCE_SCORE,
+    PairClassifier,
+    SourceReliabilityPolicy,
+    extract_claims,
+    get_nli_comparator,
+)
 
-# Verified knowledge base rules for cross-checking factual plausibility
-VERIFIED_KNOWLEDGE_CHECKS = [
-    {
-        "facet": "fast_charging_speed",
-        "contradictory_phrases": ["under 5 minutes", "never degrade"],
-        "issue": "violates physical lithium-ion C-rate thermal boundaries and warranty degradation curves",
-    },
-    {
-        "facet": "solid_state_status",
-        "contradictory_phrases": ["already in every electric car", "completely replaced"],
-        "issue": "contradicts industry production benchmarks (mass deployment not before 2027)",
-    },
-    {
-        "facet": "capacity_degradation",
-        "contradictory_phrases": ["lose 50 percent within the first two years"],
-        "issue": "contradicts US DOE and OEM warranty minimums (at least 70% retention after 8 years)",
-    },
-    {
-        "facet": "fire_safety",
-        "contradictory_phrases": ["100 times more common", "manufacturers are hiding the data"],
-        "issue": "contradicts NTSB and insurance claims data on vehicle fire incidence rates",
-    },
-    {
-        "facet": "cold_weather_range",
-        "contradictory_phrases": ["completely stop working", "lose 90 percent"],
-        "issue": "contradicts AAA and Consumer Reports real-world testing (actual drop is 20-30%)",
-    },
-    {
-        "facet": "pack_cost",
-        "contradictory_phrases": ["exceed 800 dollars", "prices have steadily doubled"],
-        "issue": "contradicts IEA and BloombergNEF cost benchmarks (~$115/kWh in 2024)",
-    },
-    {
-        "facet": "climate_skepticism",
-        "contradictory_phrases": ["natural cycle and not caused by humans"],
-        "issue": "contradicts IPCC and NASA scientific consensus on anthropogenic global warming",
-    },
-]
+VERIFICATION_CONFIDENCE_THRESHOLD = 0.65
 
 
 class EvidenceVerificationAgent:
-    def __init__(self, trust_threshold: float = 0.5):
+    def __init__(
+        self,
+        trust_threshold: float = MIN_VERIFIED_SOURCE_SCORE,
+        source_priorities: Dict[str, float] | None = None,
+        nli_classifier: PairClassifier | None = None,
+        entailment_threshold: float = VERIFICATION_CONFIDENCE_THRESHOLD,
+    ):
+        if not 0.0 <= trust_threshold <= 1.0:
+            raise ValueError("Trust threshold must be between 0 and 1.")
+        if not 0.0 <= entailment_threshold <= 1.0:
+            raise ValueError("Entailment threshold must be between 0 and 1.")
         self.trust_threshold = trust_threshold
-
-    def _red_flag_score(self, text: str) -> float:
-        text_lower = text.lower()
-        hits = sum(1 for phrase in RED_FLAG_PATTERNS if phrase in text_lower)
-        return min(1.0, hits * 0.4)
-
-    def _knowledge_base_check(self, text: str) -> tuple[float, list[str]]:
-        text_lower = text.lower()
-        penalty = 0.0
-        violations = []
-        for check in VERIFIED_KNOWLEDGE_CHECKS:
-            for phrase in check["contradictory_phrases"]:
-                if phrase in text_lower:
-                    penalty += 0.6
-                    violations.append(f"Fact-check failure ({check['facet']}): {check['issue']}")
-        return min(1.0, penalty), violations
+        self.source_policy = SourceReliabilityPolicy(
+            source_priorities, min_trusted_score=trust_threshold
+        )
+        self.nli = nli_classifier or get_nli_comparator()
+        self.entailment_threshold = entailment_threshold
 
     def verify(self, documents: List[Dict]) -> List[Dict]:
-        verified = []
-        for doc in documents:
-            source_trusted = doc.get("reliability", "unknown") == "trusted"
-            base_score = 1.0 if source_trusted else 0.25
+        document_claims = [
+            (document_index, claim)
+            for document_index, document in enumerate(documents)
+            for claim in extract_claims(str(document.get("text", "")))
+        ]
+        trusted_evidence = [
+            (document_index, document.get("id", document.get("document_id")), claim)
+            for document_index, document in enumerate(documents)
+            if self.source_policy.score(document) >= self.trust_threshold
+            for claim in extract_claims(str(document.get("text", "")))
+        ]
 
-            red_flag_penalty = self._red_flag_score(doc["text"])
-            kb_penalty, kb_violations = self._knowledge_base_check(doc["text"])
+        pair_records = [
+            (claim_index, evidence_index, (evidence_claim, claim))
+            for claim_index, (_, claim) in enumerate(document_claims)
+            for evidence_index, (source_index, _, evidence_claim) in enumerate(trusted_evidence)
+        ]
+        relationships = self.nli.classify_pairs(
+            [pair for _, _, pair in pair_records]
+        ) if pair_records else []
+        if len(relationships) != len(pair_records):
+            raise ValueError("The NLI classifier returned an unexpected result count.")
+        relation_by_claim: Dict[int, List[Dict]] = {
+            index: [] for index in range(len(document_claims))
+        }
+        for (claim_index, evidence_index, _), relation in zip(pair_records, relationships):
+            source_index, source_id, evidence_claim = trusted_evidence[evidence_index]
+            relation_by_claim[claim_index].append({
+                "source_index": source_index,
+                "source_id": source_id,
+                "evidence_claim": evidence_claim,
+                "relationship": relation["relationship"],
+                "confidence": float(relation["confidence"]),
+            })
 
-            total_penalty = min(1.0, red_flag_penalty + kb_penalty)
-            trust_score = round(max(0.0, base_score - total_penalty), 3)
-
-            reasons = [
-                f"source_authority={doc.get('reliability', 'unknown')}",
-                f"source_outlet='{doc.get('source', 'unknown')}'",
+        claims_by_document: Dict[int, List[Dict]] = {
+            index: [] for index in range(len(documents))
+        }
+        for claim_index, (document_index, claim) in enumerate(document_claims):
+            matches = relation_by_claim[claim_index]
+            supports = [
+                match for match in matches
+                if match["relationship"] == "ENTAILMENT"
+                and match["confidence"] >= self.entailment_threshold
             ]
-            if red_flag_penalty > 0:
-                reasons.append(f"red_flag_linguistics_penalty=-{red_flag_penalty:.2f}")
-            if kb_violations:
-                reasons.extend(kb_violations)
+            contradictions = [
+                match for match in matches
+                if match["relationship"] == "CONTRADICTION"
+                and match["confidence"] >= self.entailment_threshold
+            ]
+            best_support = max(
+                supports,
+                key=lambda match: (
+                    self.source_policy.score(documents[match["source_index"]]),
+                    match["confidence"],
+                ),
+                default=None,
+            )
+            best_contradiction = max(
+                contradictions,
+                key=lambda match: (
+                    self.source_policy.score(documents[match["source_index"]]),
+                    match["confidence"],
+                ),
+                default=None,
+            )
 
-            status = "VERIFIED_TRUSTED" if trust_score >= self.trust_threshold else "FLAGGED_UNRELIABLE"
-            reasoning = f"[{status}] (trust_score={trust_score:.2f}): " + "; ".join(reasons)
+            if best_contradiction and (
+                best_support is None
+                or self.source_policy.score(documents[best_contradiction["source_index"]])
+                >= self.source_policy.score(documents[best_support["source_index"]])
+            ):
+                status = "CONTRADICTED"
+                chosen_evidence = best_contradiction
+            elif best_support:
+                status = "VERIFIED"
+                chosen_evidence = best_support
+            else:
+                status = "UNSUPPORTED"
+                chosen_evidence = None
+
+            claims_by_document[document_index].append({
+                "claim": claim,
+                "source_document_ids": (
+                    [chosen_evidence["source_id"]] if chosen_evidence else []
+                ),
+                "status": status,
+                "evidence": (
+                    chosen_evidence["evidence_claim"] if chosen_evidence else ""
+                ),
+                "confidence": (
+                    round(chosen_evidence["confidence"], 3) if chosen_evidence else 0.0
+                ),
+            })
+
+        verified = []
+        for index, document in enumerate(documents):
+            claims = claims_by_document[index]
+            source_score = self.source_policy.score(document)
+            if not claims or all(claim["status"] == "UNSUPPORTED" for claim in claims):
+                verification_status = "UNSUPPORTED"
+            elif any(claim["status"] == "CONTRADICTED" for claim in claims):
+                verification_status = "CONTRADICTED"
+            elif all(claim["status"] == "VERIFIED" for claim in claims):
+                verification_status = "VERIFIED"
+            else:
+                verification_status = "UNSUPPORTED"
+
+            if source_score < self.trust_threshold:
+                reasoning = (
+                    f"Source score {source_score:.2f} is below trusted threshold "
+                    f"{self.trust_threshold:.2f}; document claims cannot serve as verified evidence."
+                )
+            else:
+                reasoning = (
+                    f"{sum(claim['status'] == 'VERIFIED' for claim in claims)} of "
+                    f"{len(claims)} extracted claims supported by trusted evidence; "
+                    f"document verification status={verification_status}."
+                )
 
             verified.append({
-                **doc,
-                "trust_score": trust_score,
+                **document,
+                "trust_score": round(source_score, 3),
+                "source_category": document.get(
+                    "source_category",
+                    document.get("source_type", "legacy_trusted" if source_score else "unknown"),
+                ),
+                "verification_status": verification_status,
+                "verification_claims": claims,
                 "verification_reasoning": reasoning,
                 "stage": "verified",
             })
         return verified
 
     def filter(self, verified_documents: List[Dict]) -> List[Dict]:
-        kept = [d for d in verified_documents if d["trust_score"] >= self.trust_threshold]
-        for d in kept:
-            d["stage"] = "evidence_filtered"
+        kept = [
+            document for document in verified_documents
+            if (
+                document["trust_score"] >= self.trust_threshold
+                and document["verification_status"] == "VERIFIED"
+            )
+        ]
+        for document in kept:
+            document["stage"] = "evidence_filtered"
         return kept

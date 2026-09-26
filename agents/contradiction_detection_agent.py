@@ -1,147 +1,192 @@
-"""
-Contradiction Detection Agent: detects logical and factual contradictions
-between candidate documents on the same entity or topic facet.
-Resolves conflicts using:
-1. Source priority (higher trust_score wins)
-2. Majority vote (consensus across surviving documents if trust ties)
-"""
-import re
-from typing import List, Dict, Tuple
+"""Domain-independent NLI contradiction detection with explainable source priority."""
 from itertools import combinations
+from typing import Dict, List, Tuple
 
-# Facet keywords for classifying text when explicit facet is absent
-FACET_KEYWORDS = {
-    "fast_charging_speed": ["fast charg", "dc fast", "minutes to charge", "under 5 min", "state of charge"],
-    "solid_state_status": ["solid-state", "solid state", "liquid electrolyte", "beyond 2027", "every electric car"],
-    "capacity_degradation": ["capacity", "degrade", "warranty", "warranties", "lose 50 percent", "retain"],
-    "fire_safety": ["fire", "fires", "flame", "burn", "safety", "catch fire"],
-    "cold_weather_range": ["cold", "winter", "freezing", "snow", "cabin heat"],
-    "pack_cost": ["cost", "price", "per kilowatt-hour", "kwh", "pack prices"],
-    "battery_recycling": ["recycl", "spent", "hydrometallurg", "recover", "second life"],
-}
-
-NUMERIC_CLAIM_PATTERN = re.compile(
-    r"(\d+(?:\.\d+)?)\s*(percent|%|minutes?|hours?|dollars?|\$|kwh|kw|times)",
-    re.IGNORECASE
+from utils.evidence_analysis import (
+    PairClassifier,
+    SourceReliabilityPolicy,
+    extract_claims,
+    get_nli_comparator,
 )
 
-
-def _infer_facet(doc: Dict) -> str:
-    if "facet" in doc and doc["facet"]:
-        return doc["facet"]
-    text_lower = doc["text"].lower()
-    for facet, keywords in FACET_KEYWORDS.items():
-        if any(kw in text_lower for kw in keywords):
-            return facet
-    return doc.get("topic", "general")
-
-
-def _extract_facet_claims(text: str) -> List[Tuple[float, str]]:
-    matches = NUMERIC_CLAIM_PATTERN.findall(text.lower())
-    claims = []
-    for val, unit in matches:
-        unit = unit.lower().replace("%", "percent").replace("$", "dollar")
-        claims.append((float(val), unit))
-    return claims
+CONTRADICTION_CONFIDENCE_THRESHOLD = 0.65
+CORROBORATION_CONFIDENCE_THRESHOLD = 0.65
 
 
 class ContradictionDetectionAgent:
-    def __init__(self, numeric_ratio_threshold: float = 1.8):
-        self.numeric_ratio_threshold = numeric_ratio_threshold
+    def __init__(
+        self,
+        numeric_ratio_threshold: float | None = None,
+        source_priorities: Dict[str, float] | None = None,
+        nli_classifier: PairClassifier | None = None,
+        contradiction_threshold: float = CONTRADICTION_CONFIDENCE_THRESHOLD,
+        corroboration_threshold: float = CORROBORATION_CONFIDENCE_THRESHOLD,
+    ):
+        # Keep the former keyword temporarily accepted for older callers.
+        del numeric_ratio_threshold
+        if not 0.0 <= contradiction_threshold <= 1.0:
+            raise ValueError("Contradiction threshold must be between 0 and 1.")
+        if not 0.0 <= corroboration_threshold <= 1.0:
+            raise ValueError("Corroboration threshold must be between 0 and 1.")
+        self.source_policy = SourceReliabilityPolicy(source_priorities)
+        self.nli = nli_classifier or get_nli_comparator()
+        self.contradiction_threshold = contradiction_threshold
+        self.corroboration_threshold = corroboration_threshold
 
-    def detect_and_resolve(self, documents: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
-        by_facet: Dict[str, List[Dict]] = {}
-        for doc in documents:
-            facet = _infer_facet(doc)
-            by_facet.setdefault(facet, []).append(doc)
+    @staticmethod
+    def _document_id(document: Dict) -> str:
+        return str(document.get("id", document.get("document_id", "unknown")))
 
-        dropped_ids = set()
-        conflict_log = []
+    def detect_and_resolve(
+        self, documents: List[Dict]
+    ) -> Tuple[List[Dict], List[Dict]]:
+        claims = [
+            {
+                "document_index": document_index,
+                "document_id": self._document_id(document),
+                "claim": claim,
+            }
+            for document_index, document in enumerate(documents)
+            for claim in extract_claims(str(document.get("text", "")))
+        ]
+        candidate_pairs = [
+            (left_index, right_index)
+            for left_index, right_index in combinations(range(len(claims)), 2)
+            if claims[left_index]["document_index"] != claims[right_index]["document_index"]
+        ]
 
-        for facet, docs in by_facet.items():
-            if len(docs) < 2:
+        directed_pairs = []
+        for left_index, right_index in candidate_pairs:
+            left, right = claims[left_index], claims[right_index]
+            directed_pairs.extend([
+                (left["claim"], right["claim"]),
+                (right["claim"], left["claim"]),
+            ])
+        relations = self.nli.classify_pairs(directed_pairs) if directed_pairs else []
+        directed_relations = {
+            (left_index, right_index): relations[pair_index * 2]
+            for pair_index, (left_index, right_index) in enumerate(candidate_pairs)
+        }
+        directed_relations.update({
+            (right_index, left_index): relations[pair_index * 2 + 1]
+            for pair_index, (left_index, right_index) in enumerate(candidate_pairs)
+        })
+
+        conflicts = []
+        for left_index, right_index in candidate_pairs:
+            left, right = claims[left_index], claims[right_index]
+            left_to_right = directed_relations[(left_index, right_index)]
+            right_to_left = directed_relations[(right_index, left_index)]
+            contradiction = max(
+                (
+                    relation for relation in (left_to_right, right_to_left)
+                    if relation["relationship"] == "CONTRADICTION"
+                ),
+                key=lambda relation: float(relation["confidence"]),
+                default=None,
+            )
+            if (
+                contradiction is None
+                or float(contradiction["confidence"]) < self.contradiction_threshold
+            ):
                 continue
 
-            for doc_a, doc_b in combinations(docs, 2):
-                if doc_a["id"] in dropped_ids or doc_b["id"] in dropped_ids:
-                    continue
+            left_document = documents[left["document_index"]]
+            right_document = documents[right["document_index"]]
+            left_priority = self.source_policy.score(left_document)
+            right_priority = self.source_policy.score(right_document)
+            left_corroborators = self._corroborators(
+                left_index, claims, directed_relations, documents
+            )
+            right_corroborators = self._corroborators(
+                right_index, claims, directed_relations, documents
+            )
 
-                is_conflict = False
-                claim_a_desc = ""
-                claim_b_desc = ""
+            preferred_index = None
+            preferred_id = None
+            if (
+                left_priority > right_priority
+                and any(priority >= right_priority for priority in left_corroborators.values())
+            ):
+                preferred_index = left["document_index"]
+            elif (
+                right_priority > left_priority
+                and any(priority >= left_priority for priority in right_corroborators.values())
+            ):
+                preferred_index = right["document_index"]
 
-                # 1. Semantic contradiction check based on mutually exclusive assertions
-                text_a = doc_a["text"].lower()
-                text_b = doc_b["text"].lower()
+            if preferred_index is not None:
+                preferred_id = self._document_id(documents[preferred_index])
+                corroborator_ids = (
+                    left_corroborators if preferred_index == left["document_index"]
+                    else right_corroborators
+                )
+                supporting_ids = [
+                    document_id for document_id, priority in corroborator_ids.items()
+                    if priority >= min(left_priority, right_priority)
+                ]
+                resolution = (
+                    f"Preferred {preferred_id} (source priority "
+                    f"{self.source_policy.score(documents[preferred_index]):.2f}) because "
+                    f"independent trusted document(s) {', '.join(supporting_ids)} corroborate its claim."
+                )
+            else:
+                resolution = (
+                    "Conflict retained as unresolved: source priority alone or "
+                    "uncorroborated evidence is insufficient to prefer either claim."
+                )
 
-                if "delayed beyond 2027" in text_a and "already in every" in text_b:
-                    is_conflict = True
-                    claim_a_desc = "Commercial deployment delayed beyond 2027"
-                    claim_b_desc = "Already in every car sold today"
-                elif "already in every" in text_a and "delayed beyond 2027" in text_b:
-                    is_conflict = True
-                    claim_a_desc = "Already in every car sold today"
-                    claim_b_desc = "Commercial deployment delayed beyond 2027"
-                elif "substantially lower rate" in text_a and "100 times more common" in text_b:
-                    is_conflict = True
-                    claim_a_desc = "Fires occur at substantially lower rate"
-                    claim_b_desc = "Fires 100 times more common"
-                elif "100 times more common" in text_a and "substantially lower rate" in text_b:
-                    is_conflict = True
-                    claim_a_desc = "Fires 100 times more common"
-                    claim_b_desc = "Fires occur at substantially lower rate"
-                else:
-                    # 2. Numeric contradiction check WITHIN THE SAME FACET
-                    claims_a = _extract_facet_claims(doc_a["text"])
-                    claims_b = _extract_facet_claims(doc_b["text"])
-                    for val_a, unit_a in claims_a:
-                        for val_b, unit_b in claims_b:
-                            if unit_a == unit_b and val_a > 0 and val_b > 0:
-                                ratio = max(val_a, val_b) / min(val_a, val_b)
-                                if ratio >= self.numeric_ratio_threshold:
-                                    is_conflict = True
-                                    claim_a_desc = f"{val_a} {unit_a}"
-                                    claim_b_desc = f"{val_b} {unit_b}"
-                                    break
-                        if is_conflict:
-                            break
+            conflicts.append({
+                "claim_a": left["claim"],
+                "claim_b": right["claim"],
+                "document_a": left["document_id"],
+                "document_b": right["document_id"],
+                "relationship": "CONTRADICTION",
+                "confidence": round(float(contradiction["confidence"]), 3),
+                "source_priority_a": round(left_priority, 3),
+                "source_priority_b": round(right_priority, 3),
+                "corroborating_documents_a": list(left_corroborators),
+                "corroborating_documents_b": list(right_corroborators),
+                "preferred_document": preferred_id,
+                "resolution": resolution,
+                # Preserve keys consumed by the existing dashboard and benchmark.
+                "doc_a": left["document_id"],
+                "doc_b": right["document_id"],
+                "winner": preferred_id,
+                "strategy": "source_priority_with_independent_corroboration" if preferred_id else "unresolved",
+                "facet": left_document.get("facet", left_document.get("topic", "general")),
+            })
 
-                if is_conflict:
-                    trust_a = doc_a.get("trust_score", 0.5)
-                    trust_b = doc_b.get("trust_score", 0.5)
+        # Preserve every candidate; conflicts are reported, never silently dropped.
+        resolved = list(documents)
+        for document in resolved:
+            document["stage"] = "contradiction_analyzed"
+        return resolved, conflicts
 
-                    # Resolution policy:
-                    # 1. Source priority: Higher trust score wins
-                    # 2. Majority vote / consensus if trust scores tie
-                    if abs(trust_a - trust_b) > 0.05:
-                        winner = doc_a if trust_a > trust_b else doc_b
-                        loser = doc_b if winner is doc_a else doc_a
-                        strategy = "source_priority"
-                        reason = f"kept {winner['id']} (trust={winner.get('trust_score', 0):.2f}) over {loser['id']} (trust={loser.get('trust_score', 0):.2f})"
-                    else:
-                        # Tie-breaker: majority vote by checking which aligns with remaining docs in topic
-                        votes_a = sum(1 for d in docs if d["id"] not in (doc_a["id"], doc_b["id"]) and d.get("trust_score", 0) >= 0.5)
-                        # Higher relevance score as secondary tie breaker
-                        rel_a = doc_a.get("relevance_score", 0)
-                        rel_b = doc_b.get("relevance_score", 0)
-                        winner = doc_a if rel_a >= rel_b else doc_b
-                        loser = doc_b if winner is doc_a else doc_a
-                        strategy = "majority_vote_and_relevance"
-                        reason = f"tied trust ({trust_a:.2f}); resolved by relevance/consensus (kept {winner['id']} rel={winner.get('relevance_score', 0):.2f})"
-
-                    dropped_ids.add(loser["id"])
-                    conflict_log.append({
-                        "facet": facet,
-                        "doc_a": doc_a["id"],
-                        "claim_a": claim_a_desc,
-                        "doc_b": doc_b["id"],
-                        "claim_b": claim_b_desc,
-                        "winner": winner["id"],
-                        "strategy": strategy,
-                        "resolution": reason,
-                    })
-
-        resolved = [d for d in documents if d["id"] not in dropped_ids]
-        for d in resolved:
-            d["stage"] = "contradiction_resolved"
-        return resolved, conflict_log
+    def _corroborators(
+        self,
+        claim_index: int,
+        claims: List[Dict],
+        directed_relations: Dict[Tuple[int, int], Dict],
+        documents: List[Dict],
+    ) -> Dict[str, float]:
+        target = claims[claim_index]
+        corroborators: Dict[str, float] = {}
+        for other_index, other in enumerate(claims):
+            if other_index == claim_index or other["document_index"] == target["document_index"]:
+                continue
+            document = documents[other["document_index"]]
+            priority = self.source_policy.score(document)
+            if priority < self.source_policy.min_trusted_score:
+                continue
+            relation = directed_relations.get((other_index, claim_index))
+            if (
+                relation
+                and relation["relationship"] == "ENTAILMENT"
+                and float(relation["confidence"]) >= self.corroboration_threshold
+            ):
+                document_id = self._document_id(document)
+                corroborators[document_id] = max(
+                    priority, corroborators.get(document_id, 0.0)
+                )
+        return corroborators

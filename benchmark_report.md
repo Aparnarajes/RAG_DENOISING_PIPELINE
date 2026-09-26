@@ -1,5 +1,10 @@
 # RAG Denoising Multi-Agent Pipeline Benchmark Report
 
+> **Historical snapshot — not current benchmark evidence.** This report is an
+> eight-query result from an earlier implementation and uses obsolete rubric,
+> accuracy, hallucination, confidence, and latency definitions. For current
+> results, see `benchmark/results/comparison.md` and `summary.json`.
+
 **Queries Evaluated:** 8 | **Overall Rubric Score:** 89.0 / 100
 
 ## 1. Assignment Evaluation Rubric Alignment (Table 3)

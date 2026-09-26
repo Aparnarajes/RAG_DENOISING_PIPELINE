@@ -1,13 +1,13 @@
-"""Retrieval Agent: queries the vector/TF-IDF index and returns raw candidates."""
+"""Retrieval Agent: queries the sentence-transformer index and returns candidates."""
 from typing import List, Dict
-from utils.embeddings import TfidfIndex
+from utils.embeddings import SentenceTransformerIndex
 
 
 class RetrievalAgent:
     """Fetches the top-k candidate documents for a query. Does no filtering —
     that responsibility belongs to downstream agents in the denoised pipeline."""
 
-    def __init__(self, index: TfidfIndex):
+    def __init__(self, index: SentenceTransformerIndex):
         self.index = index
 
     def retrieve(self, query: str, top_k: int = 6) -> List[Dict]:

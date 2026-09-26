@@ -1,0 +1,242 @@
+[
+  {
+    "id": "Q01",
+    "category": "normal",
+    "query": "What are the main human causes of climate change?",
+    "relevant_document_ids": ["D1", "D2", "D4"],
+    "expected_facts": [
+      "human activities",
+      "burning fossil fuels",
+      "greenhouse gases",
+      "deforestation"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q02",
+    "category": "normal",
+    "query": "What is the recommended water temperature for drip coffee, and why?",
+    "relevant_document_ids": ["d8"],
+    "expected_facts": [
+      "90 and 96 degrees Celsius",
+      "hotter water over-extracts bitter compounds",
+      "cooler water under-extracts flavor"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q03",
+    "category": "normal",
+    "query": "How do Arabica and Robusta beans differ in caffeine and flavor?",
+    "relevant_document_ids": ["d9"],
+    "expected_facts": [
+      "Arabica beans generally contain less caffeine than Robusta beans",
+      "smoother, less bitter flavor profile"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q04",
+    "category": "normal",
+    "query": "What do tomato plants need to produce healthy fruit?",
+    "relevant_document_ids": ["d11"],
+    "expected_facts": [
+      "at least six hours of direct sunlight per day",
+      "consistent watering"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q05",
+    "category": "normal",
+    "query": "How are materials recovered from spent EV batteries?",
+    "relevant_document_ids": ["d10"],
+    "expected_facts": [
+      "recover over 90 percent of the lithium, cobalt, and nickel",
+      "hydrometallurgical processes"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q06",
+    "category": "noisy_irrelevant",
+    "query": "What temperature range is stated for brewing drip coffee?",
+    "relevant_document_ids": ["d8"],
+    "expected_facts": [
+      "90 and 96 degrees Celsius",
+      "hotter water over-extracts bitter compounds"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q07",
+    "category": "noisy_irrelevant",
+    "query": "Which coffee bean has less caffeine, and which flavor is smoother?",
+    "relevant_document_ids": ["d9"],
+    "expected_facts": [
+      "Arabica beans generally contain less caffeine than Robusta beans",
+      "smoother, less bitter flavor profile"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q08",
+    "category": "noisy_irrelevant",
+    "query": "How many hours of direct sun and what watering do tomatoes need?",
+    "relevant_document_ids": ["d11"],
+    "expected_facts": [
+      "at least six hours of direct sunlight per day",
+      "consistent watering"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q09",
+    "category": "noisy_irrelevant",
+    "query": "How does the corpus distinguish short-term weather from climate?",
+    "relevant_document_ids": ["D5"],
+    "expected_facts": [
+      "short-term atmospheric conditions",
+      "minutes to days",
+      "average weather patterns over decades"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q10",
+    "category": "noisy_irrelevant",
+    "query": "What systems help maintain fast-charging speed and battery health?",
+    "relevant_document_ids": ["d14"],
+    "expected_facts": [
+      "battery thermal management systems",
+      "liquid cooling loops",
+      "maintaining fast charging speed and long term battery health"
+    ],
+    "expected_behavior": "answer"
+  },
+  {
+    "id": "Q11",
+    "category": "conflicting",
+    "query": "What claims do the sources make about EV fast-charging duration?",
+    "relevant_document_ids": ["d2", "d3"],
+    "expected_facts": [
+      "20 and 40 minutes on a 150 kW or faster DC fast charger"
+    ],
+    "expected_behavior": "answer",
+    "expected_conflicts": [
+      {
+        "document_ids": ["d2", "d3"],
+        "claim_a": "Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 minutes on a 150 kW or faster DC fast charger.",
+        "claim_b": "EV batteries fully charge from empty to full in under 5 minutes on any charger."
+      }
+    ]
+  },
+  {
+    "id": "Q12",
+    "category": "conflicting",
+    "query": "Are solid-state batteries already in all electric cars or not yet widely deployed?",
+    "relevant_document_ids": ["d4", "d5"],
+    "expected_facts": [
+      "delayed mass deployment beyond 2027"
+    ],
+    "expected_behavior": "answer",
+    "expected_conflicts": [
+      {
+        "document_ids": ["d4", "d5"],
+        "claim_a": "Commercial-scale manufacturing challenges have delayed mass deployment beyond 2027 for most automakers.",
+        "claim_b": "Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology."
+      }
+    ]
+  },
+  {
+    "id": "Q13",
+    "category": "conflicting",
+    "query": "What do the sources claim about EV battery capacity loss over time?",
+    "relevant_document_ids": ["d6", "d7"],
+    "expected_facts": [
+      "at least 70 percent of original capacity retained after 8 years"
+    ],
+    "expected_behavior": "answer",
+    "expected_conflicts": [
+      {
+        "document_ids": ["d6", "d7"],
+        "claim_a": "EV battery warranties guarantee at least 70 percent of original capacity retained after 8 years or 100,000 miles.",
+        "claim_b": "EV batteries typically lose 50 percent of their capacity within the first two years."
+      }
+    ]
+  },
+  {
+    "id": "Q14",
+    "category": "conflicting",
+    "query": "How do the sources compare EV and gasoline vehicle fire rates?",
+    "relevant_document_ids": ["d12", "d13"],
+    "expected_facts": [
+      "electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold"
+    ],
+    "expected_behavior": "answer",
+    "expected_conflicts": [
+      {
+        "document_ids": ["d12", "d13"],
+        "claim_a": "Electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles.",
+        "claim_b": "EV battery fires are 100 times more common than gasoline car fires."
+      }
+    ]
+  },
+  {
+    "id": "Q15",
+    "category": "conflicting",
+    "query": "How do sources differ on EV battery pack price and cost trends?",
+    "relevant_document_ids": ["d1", "d17"],
+    "expected_facts": [
+      "fell to an average of 115 dollars per kilowatt-hour in 2024"
+    ],
+    "expected_behavior": "answer",
+    "expected_conflicts": [
+      {
+        "document_ids": ["d1", "d17"],
+        "claim_a": "Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline.",
+        "claim_b": "EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years."
+      }
+    ]
+  },
+  {
+    "id": "Q16",
+    "category": "unsupported",
+    "query": "What is supervised learning, and how are its training labels created?",
+    "relevant_document_ids": [],
+    "expected_facts": [],
+    "expected_behavior": "insufficient_evidence"
+  },
+  {
+    "id": "Q17",
+    "category": "unsupported",
+    "query": "How does photosynthesis convert sunlight into chemical energy?",
+    "relevant_document_ids": [],
+    "expected_facts": [],
+    "expected_behavior": "insufficient_evidence"
+  },
+  {
+    "id": "Q18",
+    "category": "unsupported",
+    "query": "Does caffeine affect sleep, and how long do these effects last?",
+    "relevant_document_ids": [],
+    "expected_facts": [],
+    "expected_behavior": "insufficient_evidence"
+  },
+  {
+    "id": "Q19",
+    "category": "unsupported",
+    "query": "What is the current population of Mars?",
+    "relevant_document_ids": [],
+    "expected_facts": [],
+    "expected_behavior": "insufficient_evidence"
+  },
+  {
+    "id": "Q20",
+    "category": "unsupported",
+    "query": "Who invented espresso and in what year?",
+    "relevant_document_ids": [],
+    "expected_facts": [],
+    "expected_behavior": "insufficient_evidence"
+  }
+]

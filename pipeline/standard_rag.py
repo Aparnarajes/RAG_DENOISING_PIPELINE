@@ -53,8 +53,18 @@ class StandardRAGPipeline:
             "final_answer": gen_result["answer"],
             "citations": gen_result["citations"],
             "structured_citations": gen_result["structured_citations"],
-            "confidence_score": gen_result["confidence"],
-            "confidence": gen_result["confidence"],
+            "evidence_confidence_score": gen_result.get(
+                "evidence_confidence_score",
+                gen_result.get("evidence_confidence", gen_result["confidence"]),
+            ),
+            "confidence_score": gen_result.get(
+                "evidence_confidence_score",
+                gen_result.get("evidence_confidence", gen_result["confidence"]),
+            ),
+            "confidence": gen_result.get(
+                "evidence_confidence_score",
+                gen_result.get("evidence_confidence", gen_result["confidence"]),
+            ),
             "conflicts_detected": [],
             "hallucination_check": hallucination_check,
             "feedback_loop": {"triggered": False},

@@ -1,128 +1,231 @@
-"""
-Hallucination Detection Agent: post-generation evaluation agent that verifies
-every claim/sentence in the generated answer.
-Flags:
-1. Claims unsupported by verified evidence
-2. Debunked or unverified assertions (originating from untrusted sources)
-3. Internal contradictions present within the generated answer
-"""
-import re
-from typing import List, Dict
-from utils.embeddings import normalize_text
+"""Claim-level grounding against trusted, verified evidence."""
+from typing import Dict, List
 
-CITATION_PATTERN = re.compile(r"\[d\d+\]")
+from utils.evidence_analysis import (
+    PairClassifier,
+    SourceReliabilityPolicy,
+    extract_claims,
+    get_nli_comparator,
+)
 
-DEBUNKED_PATTERNS = [
-    ("under 5 minutes", "Violates physical DC fast charging C-rates; unsupported claim"),
-    ("never degrade", "Violates electrochemical battery degradation laws; unsupported claim"),
-    ("already in every electric car", "False claim; solid-state batteries are not yet in commercial production"),
-    ("completely replaced", "False claim; solid-state has not replaced lithium-ion"),
-    ("lose 50 percent of their capacity within the first two years", "False claim; contradicts warranty data (>=70% retained after 8 yrs)"),
-    ("100 times more common", "False claim; contradicted by NTSB vehicle fire statistics"),
-    ("manufacturers are hiding the data", "Conspiratorial claim; unsupported by verified records"),
-    ("completely stop working in cold", "False claim; EVs operate in winter with partial range drop"),
-    ("lose 90 percent of their battery charge immediately", "Gross exaggeration; actual cold drop is 20-30%"),
-    ("exceed 800 dollars per kilowatt-hour", "False claim; average pack cost was $115/kWh in 2024"),
-    ("natural cycle and not caused by humans", "False claim; contradicts NASA/IPCC consensus on anthropogenic global warming"),
-    ("volcanic eruptions and human activities", "Misleading attribution; natural forcings are negligible compared to greenhouse gases"),
-]
+CLAIM_CONFIDENCE_THRESHOLD = 0.65
 
 
 class HallucinationDetectionAgent:
-    def __init__(self, index, support_threshold: float = 0.15):
-        self.index = index
-        self.support_threshold = support_threshold
+    def __init__(
+        self,
+        nli_classifier: PairClassifier | None = None,
+        source_priorities: Dict[str, float] | None = None,
+        entailment_threshold: float = CLAIM_CONFIDENCE_THRESHOLD,
+    ):
+        if not 0.0 <= entailment_threshold <= 1.0:
+            raise ValueError("Entailment threshold must be between 0 and 1.")
+        self.nli = nli_classifier or get_nli_comparator()
+        self.source_policy = SourceReliabilityPolicy(source_priorities)
+        self.entailment_threshold = entailment_threshold
 
-    def _split_sentences(self, text: str) -> List[str]:
-        lines = text.strip().split("\n")
-        sentences = []
-        for line in lines:
-            line = line.strip("• -*#")
-            if not line or line.startswith("Based on") or line.startswith("Synthesized") or line.startswith("Retrieved"):
+    @staticmethod
+    def _verified_evidence(
+        documents: List[Dict], source_policy: SourceReliabilityPolicy
+    ) -> List[Dict]:
+        evidence = []
+        for document in documents:
+            priority = source_policy.score(document)
+            if priority < source_policy.min_trusted_score:
                 continue
-            raw = re.split(r"(?<=[.!?])\s+", line)
-            for s in raw:
-                s = s.strip()
-                if len(s.split()) >= 4:
-                    sentences.append(s)
-        return sentences
+
+            document_id = document.get("id", document.get("document_id"))
+            verification_claims = document.get("verification_claims")
+            if verification_claims is not None:
+                evidence.extend(
+                    {
+                        "document_id": document_id,
+                        "claim": claim["claim"],
+                        "source_priority": priority,
+                    }
+                    for claim in verification_claims
+                    if claim.get("status") == "VERIFIED"
+                )
+            elif document.get("verification_status") not in {
+                "UNSUPPORTED",
+                "CONTRADICTED",
+            }:
+                evidence.extend(
+                    {
+                        "document_id": document_id,
+                        "claim": claim,
+                        "source_priority": priority,
+                    }
+                    for claim in extract_claims(str(document.get("text", "")))
+                )
+        return evidence
+
+    @staticmethod
+    def _probabilities(relation: Dict) -> Dict[str, float]:
+        raw = relation.get("probabilities")
+        if isinstance(raw, dict):
+            return {
+                str(label).upper(): max(0.0, min(1.0, float(probability)))
+                for label, probability in raw.items()
+            }
+        relationship = str(relation.get("relationship", "NEUTRAL")).upper()
+        confidence = max(0.0, min(1.0, float(relation.get("confidence", 0.0))))
+        return {relationship: confidence}
 
     def check(
         self,
         answer_text: str,
         used_documents: List[Dict],
-        verified_corpus: List[Dict] = None,
+        verified_corpus: List[Dict] | None = None,
     ) -> Dict:
-        sentences = self._split_sentences(answer_text)
-        if not sentences:
-            return {
-                "flags": [],
-                "supported_ratio": 1.0,
-                "hallucination_rate": 0.0,
-                "sentences_checked": 0,
-            }
-
-        # Build corpus of trusted verified texts
-        trusted_docs = [
-            d for d in used_documents if d.get("reliability") == "trusted" or d.get("trust_score", 0.5) >= 0.5
-        ]
+        answer_claims = extract_claims(answer_text)
+        documents = list(used_documents)
         if verified_corpus:
-            trusted_docs.extend([d for d in verified_corpus if d.get("reliability") == "trusted"])
+            documents.extend(verified_corpus)
+        evidence = self._verified_evidence(documents, self.source_policy)
+        pairs = [
+            (item["claim"], answer_claim)
+            for answer_claim in answer_claims
+            for item in evidence
+        ]
+        relationships = self.nli.classify_pairs(pairs) if pairs else []
+        if len(relationships) != len(pairs):
+            raise ValueError("NLI classifier returned an unexpected number of results.")
 
-        trusted_evidence_text = " ".join(d["text"] for d in trusted_docs)
-
-        flags = []
-        checked = 0
-        supported = 0
-
-        for sentence in sentences:
-            clean_sentence = CITATION_PATTERN.sub("", sentence).strip()
-            clean_lower = clean_sentence.lower()
-            checked += 1
-
-            # 1. Check for known debunked / unverified claims
-            debunked_hit = None
-            for pattern, reason in DEBUNKED_PATTERNS:
-                if pattern in clean_lower:
-                    debunked_hit = (pattern, reason)
-                    break
-
-            if debunked_hit:
-                flags.append({
-                    "sentence": clean_sentence,
-                    "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
-                    "reason": debunked_hit[1],
-                    "matched_pattern": debunked_hit[0],
+        claim_results = []
+        evidence_count = len(evidence)
+        for claim_index, answer_claim in enumerate(answer_claims):
+            matches = []
+            for evidence_index, evidence_item in enumerate(evidence):
+                relation = relationships[claim_index * evidence_count + evidence_index]
+                relation_name = str(relation["relationship"]).upper()
+                relation_confidence = max(
+                    0.0, min(1.0, float(relation.get("confidence", 0.0)))
+                )
+                matches.append({
+                    **evidence_item,
+                    "relationship": relation_name,
+                    "nli_confidence": relation_confidence,
+                    "nli_probabilities": self._probabilities(relation),
                 })
-                continue
 
-            # 2. Check if supported by trusted evidence
-            if not trusted_evidence_text:
-                flags.append({
-                    "sentence": clean_sentence,
-                    "issue_type": "NO_TRUSTED_EVIDENCE",
-                    "reason": "No trusted evidence available to substantiate this statement",
-                })
-                continue
+            supports = [
+                match for match in matches
+                if match["relationship"] == "ENTAILMENT"
+                and match["nli_confidence"] >= self.entailment_threshold
+            ]
+            contradictions = [
+                match for match in matches
+                if match["relationship"] == "CONTRADICTION"
+                and match["nli_confidence"] >= self.entailment_threshold
+            ]
+            best_support = max(
+                supports,
+                key=lambda match: (
+                    match["source_priority"],
+                    match["nli_confidence"],
+                ),
+                default=None,
+            )
+            best_contradiction = max(
+                contradictions,
+                key=lambda match: (
+                    match["source_priority"],
+                    match["nli_confidence"],
+                ),
+                default=None,
+            )
 
-            sim = self.index.similarity(clean_sentence, trusted_evidence_text)
-            if sim < self.support_threshold:
-                flags.append({
-                    "sentence": clean_sentence,
-                    "issue_type": "UNSUPPORTED_BY_EVIDENCE",
-                    "similarity": round(sim, 3),
-                    "reason": f"Low semantic alignment with verified evidence (sim={sim:.3f} < {self.support_threshold})",
-                })
+            if best_contradiction and (
+                best_support is None
+                or best_contradiction["source_priority"]
+                >= best_support["source_priority"]
+            ):
+                status = "CONTRADICTED"
+                if best_support is None:
+                    selected_matches = contradictions
+                else:
+                    selected_matches = [
+                        match for match in contradictions
+                        if match["source_priority"] >= best_support["source_priority"]
+                    ]
+            elif supports:
+                status = "SUPPORTED"
+                selected_matches = supports
             else:
-                supported += 1
+                status = "UNSUPPORTED"
+                selected_matches = []
 
-        supported_ratio = round(supported / checked, 3) if checked > 0 else 1.0
-        hallucination_rate = round(1.0 - supported_ratio, 3)
+            selected = max(
+                selected_matches,
+                key=lambda match: match["nli_confidence"],
+                default=None,
+            )
+            if selected is not None:
+                classification_confidence = selected["nli_confidence"]
+                probabilities = selected["nli_probabilities"]
+            elif matches:
+                selected = max(matches, key=lambda match: match["nli_confidence"])
+                classification_confidence = selected["nli_confidence"]
+                probabilities = selected["nli_probabilities"]
+            else:
+                classification_confidence = 0.0
+                probabilities = {}
 
+            evidence_ids = list(dict.fromkeys(
+                str(match["document_id"])
+                for match in selected_matches
+                if match["document_id"] is not None
+            ))
+            evidence_records = [
+                {
+                    "document_id": match["document_id"],
+                    "claim": match["claim"],
+                    "relationship": match["relationship"],
+                    "nli_confidence": match["nli_confidence"],
+                    "nli_probabilities": match["nli_probabilities"],
+                }
+                for match in selected_matches
+            ]
+            claim_results.append({
+                "claim": answer_claim,
+                "status": status,
+                "confidence": round(classification_confidence, 3),
+                "nli_confidence": round(classification_confidence, 3),
+                "nli_probabilities": probabilities,
+                "evidence_document_ids": evidence_ids,
+                "evidence": evidence_records,
+                # Compatibility with existing consumers of the detector result.
+                "source_document_ids": evidence_ids,
+            })
+
+        checked = len(claim_results)
+        supported = sum(claim["status"] == "SUPPORTED" for claim in claim_results)
+        flags = [
+            {
+                "sentence": claim["claim"],
+                "issue_type": (
+                    "CONTRADICTED_BY_EVIDENCE"
+                    if claim["status"] == "CONTRADICTED"
+                    else "UNSUPPORTED_BY_EVIDENCE"
+                ),
+                "reason": (
+                    f"Evidence from {', '.join(claim['evidence_document_ids'])} "
+                    "supports an opposing claim."
+                    if claim["status"] == "CONTRADICTED"
+                    else "No sufficiently confident verified evidence supports this claim."
+                ),
+                "confidence": claim["confidence"],
+            }
+            for claim in claim_results
+            if claim["status"] != "SUPPORTED"
+        ]
+        supported_ratio = round(supported / checked, 3) if checked else 1.0
         return {
+            "claims": claim_results,
             "flags": flags,
             "supported_ratio": supported_ratio,
-            "hallucination_rate": hallucination_rate,
+            "hallucination_rate": round(1.0 - supported_ratio, 3),
             "sentences_checked": checked,
             "supported_count": supported,
             "flagged_count": len(flags),

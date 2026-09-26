@@ -1,4 +1,6 @@
 {
+  "historical": true,
+  "historical_note": "Eight-query result from an earlier implementation and obsolete metric definitions. Not current benchmark evidence; use benchmark/results/summary.json.",
   "aggregates": {
     "precision": [
       0.229,
