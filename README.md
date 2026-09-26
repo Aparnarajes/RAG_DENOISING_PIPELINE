@@ -9,6 +9,7 @@ RAG Denoising Pipeline" assignment brief
 ## Live Demo
 
 [Open Live Demo](glittering-snickerdoodle-9cee0e.netlify.app)
+
 ## Why this exists
 
 Standard RAG passes whatever the retriever returns straight into the LLM's
