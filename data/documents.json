@@ -1,0 +1,200 @@
+[
+  {
+    "id": "D1",
+    "title": "Causes of Climate Change",
+    "topic": "climate_change",
+    "facet": "human_causes",
+    "source": "NASA",
+    "reliability": "trusted",
+    "text": "Climate change is mainly caused by human activities such as burning fossil fuels like coal, oil, and gas, which release heat-trapping greenhouse gases into Earth's atmosphere."
+  },
+  {
+    "id": "D2",
+    "title": "Climate Change 2023: Synthesis Report",
+    "topic": "climate_change",
+    "facet": "human_causes",
+    "source": "IPCC",
+    "reliability": "trusted",
+    "text": "Human activities, especially emissions of greenhouse gases, are the primary cause of global warming observed over the past century. Carbon dioxide and methane concentrations have risen to unprecedented levels."
+  },
+  {
+    "id": "D3",
+    "title": "Is climate change real? A blog perspective",
+    "topic": "climate_change",
+    "facet": "climate_skepticism",
+    "source": "Environmental Blog",
+    "reliability": "unreliable",
+    "text": "Some people believe climate change is a natural cycle and not caused by humans. Historical climate variations show that temperatures fluctuate naturally without industrial emissions."
+  },
+  {
+    "id": "D4",
+    "title": "Understanding Climate Change",
+    "topic": "climate_change",
+    "facet": "human_causes",
+    "source": "EPA",
+    "reliability": "trusted",
+    "text": "The primary cause of climate change is the increase in greenhouse gases from electricity generation, transportation, industry, agriculture, and deforestation, trapping heat in the atmosphere."
+  },
+  {
+    "id": "D5",
+    "title": "Weather vs Climate: What's the difference?",
+    "topic": "weather",
+    "facet": "weather_definition",
+    "source": "Weather News",
+    "reliability": "trusted",
+    "text": "Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whereas climate represents average weather patterns over decades."
+  },
+  {
+    "id": "d1",
+    "title": "Lithium-ion Battery Pack Price Trends",
+    "topic": "ev_battery",
+    "facet": "pack_cost",
+    "source": "IEA Global EV Outlook 2025",
+    "reliability": "trusted",
+    "text": "Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries."
+  },
+  {
+    "id": "d2",
+    "title": "Fast Charging Parameters for EV Batteries",
+    "topic": "ev_battery",
+    "facet": "fast_charging_speed",
+    "source": "BatteryUniversity.com",
+    "reliability": "trusted",
+    "text": "Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 minutes on a 150 kW or faster DC fast charger, depending on battery chemistry and thermal management."
+  },
+  {
+    "id": "d3",
+    "title": "Instant EV Charging Forum Claims",
+    "topic": "ev_battery",
+    "facet": "fast_charging_speed",
+    "source": "Random EV Forum Post",
+    "reliability": "unreliable",
+    "text": "My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them."
+  },
+  {
+    "id": "d4",
+    "title": "Solid-State Battery Commercialization Outlook",
+    "topic": "ev_battery",
+    "facet": "solid_state_status",
+    "source": "Nature Energy 2023",
+    "reliability": "trusted",
+    "text": "Solid-state batteries promise higher energy density than conventional lithium-ion cells by replacing the liquid electrolyte with a solid one, but commercial-scale manufacturing challenges have delayed mass deployment beyond 2027 for most automakers."
+  },
+  {
+    "id": "d5",
+    "title": "Solid-State Battery Industry Hype",
+    "topic": "ev_battery",
+    "facet": "solid_state_status",
+    "source": "Blog: TechHypeDaily",
+    "reliability": "unreliable",
+    "text": "Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry."
+  },
+  {
+    "id": "d6",
+    "title": "EV Battery Warranty and Capacity Retention Standards",
+    "topic": "ev_battery",
+    "facet": "capacity_degradation",
+    "source": "US DOE Vehicle Technologies Office",
+    "reliability": "trusted",
+    "text": "Most EV battery warranties in the United States guarantee at least 70 percent of original capacity retained after 8 years or 100,000 miles, whichever comes first."
+  },
+  {
+    "id": "d7",
+    "title": "Rapid Battery Degradation Claims",
+    "topic": "ev_battery",
+    "facet": "capacity_degradation",
+    "source": "ContrarianEnergyBlog",
+    "reliability": "unreliable",
+    "text": "EV batteries typically lose 50 percent of their capacity within the first two years of ownership regardless of usage patterns, making them a poor long term investment."
+  },
+  {
+    "id": "d8",
+    "title": "Optimal Water Temperature for Drip Coffee",
+    "topic": "coffee",
+    "facet": "brewing",
+    "source": "Food Science Journal",
+    "reliability": "trusted",
+    "text": "The optimal water temperature for brewing drip coffee is generally between 90 and 96 degrees Celsius, as hotter water over-extracts bitter compounds and cooler water under-extracts flavor."
+  },
+  {
+    "id": "d9",
+    "title": "Arabica vs Robusta Coffee Bean Characteristics",
+    "topic": "coffee",
+    "facet": "coffee_beans",
+    "source": "Barista Weekly",
+    "reliability": "trusted",
+    "text": "Arabica beans generally contain less caffeine than Robusta beans but are prized for a smoother, less bitter flavor profile."
+  },
+  {
+    "id": "d10",
+    "title": "Hydrometallurgical EV Battery Recycling Processes",
+    "topic": "ev_battery",
+    "facet": "battery_recycling",
+    "source": "Reuters",
+    "reliability": "trusted",
+    "text": "Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs using hydrometallurgical processes, reducing dependence on newly mined materials."
+  },
+  {
+    "id": "d11",
+    "title": "Sunlight and Hydration for Tomato Cultivation",
+    "topic": "gardening",
+    "facet": "horticulture",
+    "source": "Gardening Monthly",
+    "reliability": "trusted",
+    "text": "Tomato plants generally require at least six hours of direct sunlight per day and consistent watering to produce healthy fruit."
+  },
+  {
+    "id": "d12",
+    "title": "Social Media Claims on EV Fire Frequency",
+    "topic": "ev_battery",
+    "facet": "fire_safety",
+    "source": "AnonymousTweetScreenshot",
+    "reliability": "unreliable",
+    "text": "Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data."
+  },
+  {
+    "id": "d13",
+    "title": "NTSB EV Fire Safety and Statistics Report",
+    "topic": "ev_battery",
+    "facet": "fire_safety",
+    "source": "National Transportation Safety Board Report",
+    "reliability": "trusted",
+    "text": "Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start."
+  },
+  {
+    "id": "d14",
+    "title": "Liquid Cooling and Thermal Management Systems",
+    "topic": "ev_battery",
+    "facet": "fast_charging_speed",
+    "source": "MIT Technology Review",
+    "reliability": "trusted",
+    "text": "Battery thermal management systems, including liquid cooling loops, are critical for maintaining fast charging speed and long term battery health in modern EVs."
+  },
+  {
+    "id": "d15",
+    "title": "Cold Weather Impact on EV Range and Efficiency",
+    "topic": "ev_battery",
+    "facet": "cold_weather_range",
+    "source": "AAA Automotive Research",
+    "reliability": "trusted",
+    "text": "Cold winter temperatures temporarily reduce EV driving range by 20 to 30 percent, primarily because energy is diverted to heat the passenger cabin and battery electrochemistry slows down in sub-freezing weather."
+  },
+  {
+    "id": "d16",
+    "title": "Winter Freezing EV Battery Rumors",
+    "topic": "ev_battery",
+    "facet": "cold_weather_range",
+    "source": "FreezeOutForums",
+    "reliability": "unreliable",
+    "text": "Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows."
+  },
+  {
+    "id": "d17",
+    "title": "Replacement Battery Pack Price Skepticism",
+    "topic": "ev_battery",
+    "facet": "pack_cost",
+    "source": "CleanEnergySkepticBlog",
+    "reliability": "unreliable",
+    "text": "EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years."
+  }
+]

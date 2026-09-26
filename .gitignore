@@ -1,0 +1,24 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+dist/
+
+# Local debugging and validation scripts
+check_*.py
+debug.*
+diagnose.py
+extracted.js
+find_*.py
+fix_charts.py
+full_script.js
+run_js.py
+script_out.js
+test.js
+test.py
+test_*.py
+verify.py

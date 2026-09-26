@@ -1,0 +1,125 @@
+[
+  {
+    "id": "q0",
+    "query": "What are the main causes of climate change?",
+    "relevant_doc_ids": ["D1", "D2", "D4"],
+    "ground_truth_answer": "Climate change is primarily caused by human activities that increase greenhouse gas concentrations in the atmosphere. The major contributors include burning fossil fuels such as coal, oil, and natural gas, deforestation and land-use changes, and certain agricultural and industrial activities.",
+    "key_facts": [
+      "human activities",
+      "greenhouse gas concentrations",
+      "burning fossil fuels",
+      "coal, oil, and natural gas",
+      "deforestation"
+    ],
+    "forbidden_claims": [
+      "natural cycle and not caused by humans",
+      "volcanic eruptions and solar radiation are the main causes"
+    ]
+  },
+  {
+    "id": "q1",
+    "query": "How long does it take to fast charge an EV battery?",
+    "relevant_doc_ids": ["d2", "d14"],
+    "ground_truth_answer": "Fast charging an EV lithium-ion battery from 20% to 80% state of charge typically takes 20 to 40 minutes on a 150 kW or faster DC charger, dependent on active thermal management.",
+    "key_facts": [
+      "20 to 40 minutes",
+      "20 percent to 80 percent",
+      "150 kW or faster DC fast charger",
+      "thermal management"
+    ],
+    "forbidden_claims": [
+      "under 5 minutes",
+      "never degrade"
+    ]
+  },
+  {
+    "id": "q2",
+    "query": "Are solid-state batteries used in electric cars today?",
+    "relevant_doc_ids": ["d4"],
+    "ground_truth_answer": "No, solid-state batteries are not in mass-market electric vehicles today; commercial-scale manufacturing hurdles have delayed deployment beyond 2027.",
+    "key_facts": [
+      "delayed beyond 2027",
+      "commercial-scale manufacturing challenges",
+      "higher energy density"
+    ],
+    "forbidden_claims": [
+      "already in every electric car",
+      "completely replaced lithium-ion"
+    ]
+  },
+  {
+    "id": "q3",
+    "query": "How much capacity do EV batteries lose over time?",
+    "relevant_doc_ids": ["d6"],
+    "ground_truth_answer": "EV batteries degrade gradually; standard US manufacturer warranties guarantee at least 70% capacity retention after 8 years or 100,000 miles.",
+    "key_facts": [
+      "at least 70 percent",
+      "8 years or 100,000 miles",
+      "warranties guarantee"
+    ],
+    "forbidden_claims": [
+      "lose 50 percent within the first two years",
+      "poor long term investment"
+    ]
+  },
+  {
+    "id": "q4",
+    "query": "Are electric vehicles more likely to catch fire than gas cars?",
+    "relevant_doc_ids": ["d13"],
+    "ground_truth_answer": "No, data compiled from insurance claims and the NTSB shows electric vehicles catch fire at a substantially lower rate per 100,000 vehicles than gasoline-powered cars.",
+    "key_facts": [
+      "substantially lower rate",
+      "per 100,000 vehicles sold",
+      "harder to extinguish once started"
+    ],
+    "forbidden_claims": [
+      "100 times more common",
+      "manufacturers are hiding the data"
+    ]
+  },
+  {
+    "id": "q5",
+    "query": "What happens to EV batteries after they are retired from vehicles?",
+    "relevant_doc_ids": ["d10"],
+    "ground_truth_answer": "Retired EV batteries undergo recycling using hydrometallurgical processes that recover over 90% of critical materials including lithium, cobalt, and nickel.",
+    "key_facts": [
+      "recover over 90 percent",
+      "lithium, cobalt, and nickel",
+      "hydrometallurgical processes",
+      "recycling"
+    ],
+    "forbidden_claims": [
+      "catch fire at a substantially lower rate"
+    ]
+  },
+  {
+    "id": "q6",
+    "query": "How does cold winter weather affect electric vehicle range?",
+    "relevant_doc_ids": ["d15"],
+    "ground_truth_answer": "Cold winter temperatures temporarily reduce EV driving range by 20% to 30% due to cabin heating demands and slower battery electrochemistry.",
+    "key_facts": [
+      "reduce driving range by 20 to 30 percent",
+      "cabin heating",
+      "battery electrochemistry slows down"
+    ],
+    "forbidden_claims": [
+      "completely stop working",
+      "lose 90 percent of their battery charge immediately"
+    ]
+  },
+  {
+    "id": "q7",
+    "query": "What is the average cost of an electric vehicle battery pack per kilowatt-hour?",
+    "relevant_doc_ids": ["d1"],
+    "ground_truth_answer": "Lithium-ion battery pack prices fell to an average of $115 per kilowatt-hour in 2024, continuing a long-term cost reduction trend.",
+    "key_facts": [
+      "115 dollars per kilowatt-hour",
+      "in 2024",
+      "decade-long decline"
+    ],
+    "forbidden_claims": [
+      "exceed 800 dollars per kilowatt-hour",
+      "prices have steadily doubled"
+    ]
+  }
+]
