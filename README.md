@@ -136,9 +136,9 @@ must not be changed merely to improve a score.
 
 ## 10. Current benchmark results
 
-These are the values in `benchmark/results/summary.json` (saved run dated
-2026-09-26). They are a snapshot, not a promise of identical results on other
-hardware, model revisions, or environments.
+These are the values in `benchmark/results/summary.json` (saved run generated
+2026-09-26 23:12 UTC). They are a snapshot, not a promise of identical results
+on other hardware, model revisions, or environments.
 
 | Denoised RAG metric | Saved result |
 |---|---:|
@@ -160,15 +160,15 @@ above.
 
 ### Saved warm latency and initialization
 
-The final audit benchmark run measured pipeline/index initialization at
-**8.380 s** and NLI first-inference warm-up at **4.664 s** (both outside query
-timing). Startup timing varies with cache and machine load.
+The latest saved run measured pipeline/index initialization at **7.983 s**
+and NLI first-inference warm-up at **4.763 s** (both outside query timing).
+Startup timing varies with cache and machine load.
 
 | Warm pipeline latency | Standard RAG | Denoised RAG |
 |---|---:|---:|
-| Mean | 0.1471 s | 0.1128 s |
-| Median | 0.1329 s | 0.0660 s |
-| p95 (nearest rank) | 0.2452 s | 0.2902 s |
+| Mean | 0.1581 s | 0.1289 s |
+| Median | 0.1730 s | 0.0876 s |
+| p95 (nearest rank) | 0.2473 s | 0.2962 s |
 
 These timing values are hardware- and run-dependent. Model cold-start and
 download time are not included in per-query latency.
@@ -179,7 +179,14 @@ download time are not included in per-query latency.
 live comparison, saved benchmark summary, and demo examples. It initializes
 both pipelines once per process and serializes concurrent use of their shared
 model instances. The UI displays retrieved documents, evidence stages,
-conflicts, claim findings, abstention, evidence confidence, and latency.
+conflicts, claim findings, abstention, evidence confidence, and latency. In
+the live claim panel, answer claims are filtered with the benchmark's generic
+answer-claim extraction logic so headings, preambles, resolution/confidence
+metadata, and duplicate conflict-format fragments are not presented as
+factual claims. This is a display-only boundary: the pipeline's raw
+hallucination-check output and benchmark evaluation are unchanged. Displayed
+factual claims retain their status, evidence document IDs, and available NLI
+evidence details.
 
 The default server binds to `127.0.0.1`. It has no authentication and is for
 local development; do not expose it to an untrusted network. Static hosting or
@@ -291,8 +298,11 @@ Run the complete unit suite:
 python -m unittest discover -s tests -v
 ```
 
-Dashboard live endpoints can also be exercised by selecting the supported,
-conflicting, and unsupported examples in the UI.
+The final dashboard claim-display update was validated with **70 passing
+tests**. Live dashboard smoke checks also covered a supported query, an
+unsupported query that abstains with zero generation evidence, and a
+conflicting query whose factual claims retain their statuses and evidence
+without showing conflict metadata as claims.
 
 ## 17. Limitations and historical artifacts
 
