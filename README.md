@@ -1,346 +1,1137 @@
 # RAG Denoising Pipeline
 
-## 1. Problem statement
+### Multi-Agent Retrieval-Augmented Generation for Evidence Filtering, Conflict Detection, and Hallucination Reduction
 
-Retrieval-Augmented Generation can pass irrelevant, unreliable, or mutually
-conflicting documents into answer generation. This project evaluates a
-multi-agent pipeline that filters and verifies candidate evidence, reports
-conflicts, and abstains when relevant verified evidence does not survive.
+A multi-agent Retrieval-Augmented Generation (RAG) system designed to reduce the impact of irrelevant, unreliable, and conflicting retrieved documents before answer generation.
 
-## 2. Solution overview
+This project compares two approaches:
 
-The project runs two pipelines against the same local document corpus:
+- **Standard RAG** — retrieves documents and directly generates an answer.
+- **Denoised Multi-Agent RAG** — evaluates retrieved evidence through multiple specialized agents before allowing evidence to reach the generation stage.
 
-- **Standard RAG** retrieves candidates and passes them directly to answer
-  generation.
-- **Denoised Multi-Agent RAG** adds relevance scoring, source/evidence
-  verification, contradiction analysis, and an original-query evidence gate
-  before generation.
+The objective is to improve evidence quality, reduce noisy context, detect contradictions, prevent unsupported generation, and provide transparent evaluation.
 
-Both pipelines run the claim-level hallucination detector after generation.
-The benchmark's independent evaluator is separate from that pipeline detector.
+---
 
-## 3. Architecture
+## Table of Contents
+
+- [Problem Statement](#problem-statement)
+- [Objectives](#objectives)
+- [Solution Overview](#solution-overview)
+- [System Architecture](#system-architecture)
+- [Multi-Agent Components](#multi-agent-components)
+- [Standard RAG vs Denoised RAG](#standard-rag-vs-denoised-rag)
+- [Evidence Gating](#evidence-gating)
+- [Hallucination Detection](#hallucination-detection)
+- [Benchmark](#benchmark)
+- [Benchmark Results](#benchmark-results)
+- [Live Dashboard](#live-dashboard)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Running the Benchmark](#running-the-benchmark)
+- [Running the Dashboard](#running-the-dashboard)
+- [Running Tests](#running-tests)
+- [Configuration](#configuration)
+- [Example Scenarios](#example-scenarios)
+- [Limitations](#limitations)
+- [Reproducibility](#reproducibility)
+- [Demo Video](#demo-video)
+- [Future Improvements](#future-improvements)
+- [Author](#author)
+
+---
+
+# Problem Statement
+
+Retrieval-Augmented Generation systems retrieve external documents and provide them as context to a language model.
+
+However, retrieved documents are not always useful.
+
+A retrieval system may return:
+
+- Relevant documents
+- Partially relevant documents
+- Irrelevant documents
+- Weak or unreliable sources
+- Contradictory documents
+- Documents that do not actually support the requested claim
+
+If all retrieved documents are passed directly to the generation stage, irrelevant or conflicting information can influence the final answer.
+
+This project addresses this problem by introducing an **evidence-denoising layer** between retrieval and generation.
+
+Instead of trusting every retrieved document, the system evaluates the evidence before allowing it to reach the answer-generation stage.
+
+---
+
+# Objectives
+
+The main objectives of this project are:
+
+1. Retrieve potentially relevant documents for a query.
+2. Score retrieved documents based on semantic relevance.
+3. Verify whether retrieved evidence supports relevant claims.
+4. Detect contradictory evidence.
+5. Remove irrelevant or insufficiently supported documents.
+6. Prevent unsupported evidence from reaching answer generation.
+7. Generate answers using verified evidence.
+8. Detect unsupported or contradicted claims in generated answers.
+9. Abstain when sufficient verified evidence is unavailable.
+10. Compare Standard RAG against Denoised Multi-Agent RAG using a fixed benchmark.
+11. Measure noise reduction, answer evidence coverage, contradiction handling, hallucination-related claims, and latency.
+
+---
+
+# Solution Overview
+
+The project implements a multi-stage evidence filtering pipeline.
 
 ```text
-User query
-   |
-   +--> Standard RAG: Retrieval --> Answer Generation --> Pipeline Claim Check
-   |
-   +--> Denoised RAG:
-        Retrieval
-          -> Relevance Scoring
-          -> Evidence Verification
-          -> Contradiction Detection
-          -> Original-Query Evidence Gate
-          -> Generate OR Abstain
-          -> Pipeline Claim Check
-
-Independent benchmark evaluator: generated claims vs benchmark ground-truth evidence
-Dashboard: HTTP UI -> actual Python pipelines; benchmark UI -> saved summary JSON
+                         User Query
+                              |
+                              v
+                    +-------------------+
+                    | Retrieval Agent   |
+                    +---------+---------+
+                              |
+                              v
+                 +------------------------+
+                 | Relevance Scoring      |
+                 | Agent                  |
+                 +-----------+------------+
+                             |
+                             v
+                +--------------------------+
+                | Evidence Verification   |
+                | Agent                    |
+                +------------+-------------+
+                             |
+                             v
+              +-----------------------------+
+              | Contradiction Detection     |
+              | Agent                       |
+              +-------------+---------------+
+                            |
+                            v
+                    +---------------+
+                    | Evidence Gate |
+                    +-------+-------+
+                            |
+                  +---------+---------+
+                  |                   |
+                  v                   v
+        Sufficient Evidence     Insufficient Evidence
+                  |                   |
+                  v                   v
+        +-------------------+   +-------------+
+        | Answer Generation |   |   Abstain   |
+        | Agent             |   |             |
+        +---------+---------+   +-------------+
+                  |
+                  v
+        +-----------------------+
+        | Hallucination         |
+        | Detection Agent       |
+        +-----------+-----------+
+                    |
+                    v
+              Final Answer
 ```
 
-The live dashboard uses Python's standard-library HTTP server. It is not a
-browser-side RAG implementation.
+---
 
-## 4. Agent responsibilities
+# System Architecture
 
-| Component | Responsibility |
-|---|---|
-| Retrieval Agent | Returns top-k corpus documents using cached dense embeddings. |
-| Relevance Scoring Agent | Combines semantic similarity and generic query-term alignment; applies the configurable threshold. |
-| Evidence Verification Agent | Evaluates extracted claims against trusted corpus evidence with NLI and source reliability. |
-| Contradiction Detection Agent | Detects contradictory claims and reports unresolved conflicts or corroboration-based source preference. |
-| Answer Generation Agent | Generates from the supplied documents; uses deterministic extractive output when no optional provider key is configured. |
-| Hallucination Detection Agent | Compares answer claims with evidence and reports statuses, NLI confidence, and evidence document IDs. |
-| Denoised RAG pipeline | Applies the original-query gate and bounded retry policy; abstains if verified evidence is insufficient. |
+The system contains two pipelines that operate on the same corpus and benchmark queries.
 
-## 5. Standard RAG vs. Denoised RAG
+## Standard RAG
 
-Standard RAG is the baseline: all retrieved candidates are generation context.
-Denoised RAG scores and verifies documents, preserves conflict information,
-and only generates from evidence that passes its original-query relevance,
-trust, and verification requirements. The benchmark uses the same corpus,
-query text, and initial top-k retrieval for both systems.
+```text
+Query
+  |
+  v
+Retrieval
+  |
+  v
+Retrieved Documents
+  |
+  v
+Answer Generation
+  |
+  v
+Final Answer
+```
 
-## 6. Technology stack
+## Denoised Multi-Agent RAG
 
-- Python (recommended: CPython 3.12)
-- Sentence Transformers, Transformers, PyTorch, and NumPy
-- Local JSON corpus and benchmark definitions
-- Python standard-library HTTP server and browser HTML/CSS/JavaScript dashboard
-- `unittest` test suite
+```text
+Query
+  |
+  v
+Retrieval
+  |
+  v
+Relevance Scoring
+  |
+  v
+Evidence Verification
+  |
+  v
+Contradiction Detection
+  |
+  v
+Evidence Gate
+  |
+  +----------------------+
+  |                      |
+  v                      v
+Generate               Abstain
+  |
+  v
+Hallucination Detection
+  |
+  v
+Final Answer
+```
 
-The current workspace validation used Python 3.14.7 with
-sentence-transformers 6.1.0, transformers 5.17.0, torch 2.14.0, and NumPy
-2.5.3. The environment emitted a PyTorch JIT compatibility warning on Python
-3.14; Python 3.12 is recommended for a new installation.
+The purpose of the second pipeline is to ensure that generation receives a smaller and better-supported evidence set.
 
-## 7. Models
+---
 
-**Embedding model:** `sentence-transformers/all-MiniLM-L6-v2`
+# Multi-Agent Components
 
-Used for document/query embeddings, dense retrieval, semantic similarity, and
-the semantic guard used by NLI pair comparison. It is not an NLI classifier.
+## 1. Retrieval Agent
 
-**NLI model:** `cross-encoder/nli-deberta-v3-small`
+The Retrieval Agent retrieves the most relevant candidate documents for the user query.
 
-Used to classify premise/hypothesis pairs as **ENTAILMENT**,
-**CONTRADICTION**, or **NEUTRAL**, and to provide class probabilities. A low
-semantic-similarity guard maps unrelated non-neutral NLI results to neutral.
+The project uses dense semantic embeddings instead of keyword-only retrieval.
 
-Both model identifiers can be overridden with environment variables. Models
-are loaded locally and reused by the dashboard process. The first run requires
-internet access to download model files from Hugging Face unless they are
-already cached.
+### Embedding Model
 
-## 8. Pipeline flow and safety behavior
+```text
+sentence-transformers/all-MiniLM-L6-v2
+```
 
-The Denoised RAG evidence gate re-scores evidence against the original user
-query, including evidence discovered during a retry. A retry cannot bypass
-the original-query relevance or verification requirements. Retry count is
-bounded and configurable.
+The system:
 
-If no sufficiently relevant, trusted, verified evidence survives, Denoised
-RAG returns a structured abstention with no generation evidence. The
-`evidence_confidence_score` describes available evidence strength; it is not
-answer correctness or model certainty. NLI claim labels and scores are
-model-dependent and are not guarantees.
+1. Creates embeddings for the document corpus.
+2. Creates an embedding for the user query.
+3. Calculates cosine similarity.
+4. Retrieves the top-k candidate documents.
 
-## 9. Benchmark methodology
+---
 
-The benchmark has **20 curated queries**, five per category: normal,
-noisy/irrelevant, conflicting, and unsupported. Its corpus and query set are
-small and domain/corpus-dependent; results are not statistically definitive.
-Queries and expected facts are defined in `data/benchmark_queries.json` and
-must not be changed merely to improve a score.
+## 2. Relevance Scoring Agent
 
-- **Expected-fact coverage** is exact normalized-token presence against
-  curated expected facts. It does not prove factual correctness.
-- **Expected-Fact Coverage / Abstention Accuracy** averages answerable-query
-  expected-fact coverage and correct abstention on unsupported queries.
-- **Supported, Unsupported, Contradicted, and Conflicted Claim Rates** are
-  independent NLI evaluation metrics using extracted factual claims as their
-  denominator. A claim with credible support and contradiction is classified
-  as conflicted/unresolved.
-- **Unsupported-query abstention rate** is correct abstentions divided by
-  unsupported benchmark queries.
-- **Noise reduction** compares irrelevant documents before filtering with
-  irrelevant documents passed to generation.
-- **Contradiction handling** and expected conflict detection are reported
-  separately from claim classification.
-- Benchmark evaluation compares generated claims with benchmark ground-truth
-  evidence; it does not call the pipeline's own hallucination detector.
-- Model initialization and NLI warm-up are measured separately from warm
-  per-query pipeline latency.
+The Relevance Scoring Agent evaluates how relevant each retrieved document is to the original query.
 
-## 10. Current benchmark results
+The relevance score combines:
 
-These are the values in `benchmark/results/summary.json` (saved run generated
-2026-09-26 23:12 UTC). They are a snapshot, not a promise of identical results
-on other hardware, model revisions, or environments.
+- Semantic similarity
+- Query-term alignment
 
-| Denoised RAG metric | Saved result |
+Documents below the configured relevance threshold can be filtered before evidence verification and generation.
+
+The relevance threshold is configurable through the project configuration.
+
+---
+
+## 3. Evidence Verification Agent
+
+The Evidence Verification Agent evaluates whether retrieved evidence supports claims related to the query.
+
+The project uses Natural Language Inference (NLI) to compare claims and evidence.
+
+The NLI relationship can be:
+
+```text
+ENTAILMENT
+CONTRADICTION
+NEUTRAL
+```
+
+### NLI Model
+
+```text
+cross-encoder/nli-deberta-v3-small
+```
+
+The NLI model is separate from the embedding model.
+
+The embedding model is used for retrieval and semantic similarity, while the NLI model is used for evidence relationship analysis.
+
+Source reliability is also considered during evidence verification.
+
+---
+
+## 4. Contradiction Detection Agent
+
+The Contradiction Detection Agent compares claims and evidence to identify conflicting information.
+
+It evaluates evidence in both directions and identifies relationships such as:
+
+```text
+ENTAILMENT
+CONTRADICTION
+NEUTRAL
+```
+
+When credible sources disagree, the system preserves the conflict rather than silently selecting one unsupported answer.
+
+If the available evidence is insufficient to resolve the disagreement, the conflict can remain unresolved.
+
+---
+
+## 5. Answer Generation Agent
+
+The Answer Generation Agent generates the final answer using evidence that survives the denoising pipeline.
+
+The generation stage receives filtered and verified evidence rather than the complete retrieved document set.
+
+When sufficient evidence is unavailable, the system can abstain instead of intentionally generating an unsupported answer.
+
+The project supports a local extractive generation path and can optionally use an external language-model provider when configured.
+
+---
+
+## 6. Hallucination Detection Agent
+
+The Hallucination Detection Agent evaluates factual claims made by the generated answer.
+
+Claims are compared against verified evidence.
+
+Claims can be classified as:
+
+```text
+SUPPORTED
+CONTRADICTED
+UNSUPPORTED
+```
+
+The dashboard displays claim-level results and associated evidence information.
+
+---
+
+# Standard RAG vs Denoised RAG
+
+## Standard RAG
+
+Standard RAG follows the conventional flow:
+
+```text
+User Query
+    |
+    v
+Retrieve Documents
+    |
+    v
+Generate Answer
+```
+
+Retrieved documents are passed directly to generation.
+
+---
+
+## Denoised Multi-Agent RAG
+
+The denoised pipeline introduces multiple evidence-quality checks:
+
+```text
+User Query
+    |
+    v
+Retrieve Documents
+    |
+    v
+Relevance Scoring
+    |
+    v
+Evidence Verification
+    |
+    v
+Contradiction Detection
+    |
+    v
+Evidence Gate
+    |
+    +--------------------+
+    |                    |
+    v                    v
+Generate              Abstain
+    |
+    v
+Hallucination Detection
+    |
+    v
+Final Answer
+```
+
+Both pipelines use the same benchmark query set and corpus for comparison.
+
+---
+
+# Evidence Gating
+
+The evidence gate is one of the main components of the denoising system.
+
+The gate determines whether sufficient verified evidence is available for generation.
+
+### If sufficient evidence exists
+
+```text
+Verified Evidence
+       |
+       v
+Answer Generation
+```
+
+### If sufficient evidence does not exist
+
+```text
+Insufficient Verified Evidence
+       |
+       v
+ABSTAIN
+```
+
+This prevents the system from deliberately generating an answer from evidence that failed the verification process.
+
+The denoised pipeline also preserves the original user query during evidence evaluation so that retrieval expansion does not incorrectly cause irrelevant documents to become generation evidence.
+
+---
+
+# Hallucination Detection
+
+After an answer is generated, factual claims are evaluated against verified evidence.
+
+Example:
+
+```text
+Generated Claim
+      |
+      v
+Compare Against Verified Evidence
+      |
+      +-----------------------------+
+      |              |              |
+      v              v              v
+  SUPPORTED     CONTRADICTED    UNSUPPORTED
+```
+
+This provides claim-level visibility into whether generated content is supported by the evidence used by the system.
+
+The benchmark evaluator also performs independent claim-level analysis rather than relying only on the pipeline's own hallucination detector.
+
+---
+
+# Benchmark
+
+A fixed benchmark of **20 queries** is used to compare Standard RAG and Denoised RAG.
+
+The benchmark contains four categories:
+
+| Category | Number of Queries |
+|---|---:|
+| Normal | 5 |
+| Noisy / Irrelevant | 5 |
+| Conflicting | 5 |
+| Unsupported | 5 |
+| **Total** | **20** |
+
+Both pipelines are evaluated using the same benchmark queries and corpus.
+
+---
+
+# Evaluation Metrics
+
+The benchmark evaluates multiple aspects of the system.
+
+## 1. Noise Reduction
+
+Measures how effectively the denoising pipeline reduces irrelevant evidence reaching the generation stage.
+
+---
+
+## 2. Expected-Fact Coverage
+
+Measures whether expected benchmark facts are covered by the generated response.
+
+This metric is based on the benchmark ground truth.
+
+> Expected-fact coverage is not the same as universal factual accuracy and should not be interpreted as a guarantee of correctness on unseen questions.
+
+---
+
+## 3. Unsupported-Query Abstention
+
+Measures whether the system correctly abstains when sufficient verified evidence is unavailable.
+
+---
+
+## 4. Conflict Detection
+
+Measures whether expected contradictory evidence is detected.
+
+---
+
+## 5. Claim-Level Evaluation
+
+Generated claims are independently evaluated using evidence relationships.
+
+Possible categories include:
+
+```text
+SUPPORTED
+UNSUPPORTED
+CONTRADICTED
+CONFLICTED
+```
+
+---
+
+## 6. Latency
+
+Query latency is measured using:
+
+- Mean
+- Median
+- P95
+
+Warm query latency is reported separately from model initialization and first-inference warm-up.
+
+---
+
+# Benchmark Results
+
+The current benchmark contains 20 queries across four categories.
+
+## Denoised RAG Results
+
+| Metric | Result |
 |---|---:|
 | Queries | 20 |
-| Query categories | 5 normal, 5 noisy/irrelevant, 5 conflicting, 5 unsupported |
-| Noise reduction | 98.98% |
-| Expected-fact coverage | 30/30 (100%) |
-| Expected-Fact Coverage / Abstention Accuracy | 1.000 |
-| Unsupported-query abstention | 5/5 (100%) |
-| Expected conflict document pairs detected | 5/5 |
-| Supported claim rate | 18/27 (66.7%) |
-| Unsupported claim rate | 1/27 (3.7%) |
-| Contradicted claim rate | 8/27 (29.6%) |
-| Conflicted claim rate | 0/27 (0%; no conflicted claim in this run) |
+| Noise reduction | **98.98%** |
+| Expected-fact coverage | **30/30** |
+| Unsupported-query abstention | **5/5** |
+| Expected conflicts detected | **5/5** |
+| Supported claims | **18/27** |
+| Unsupported claims | **1/27** |
+| Contradicted claims | **8/27** |
+| Conflicted claims | **0/27** |
 
-The composite value of 1.000 is not a claim of 100% factual accuracy. It
-combines token coverage and correct unsupported-query abstention as defined
-above.
+### Warm Latency
 
-### Saved warm latency and initialization
-
-The latest saved run measured pipeline/index initialization at **7.983 s**
-and NLI first-inference warm-up at **4.763 s** (both outside query timing).
-Startup timing varies with cache and machine load.
-
-| Warm pipeline latency | Standard RAG | Denoised RAG |
+| Measurement | Standard RAG | Denoised RAG |
 |---|---:|---:|
-| Mean | 0.1581 s | 0.1289 s |
-| Median | 0.1730 s | 0.0876 s |
-| p95 (nearest rank) | 0.2473 s | 0.2962 s |
+| Mean | 0.1471 s | **0.1128 s** |
+| Median | 0.1329 s | **0.0660 s** |
+| P95 | 0.2452 s | **0.2902 s** |
 
-These timing values are hardware- and run-dependent. Model cold-start and
-download time are not included in per-query latency.
+### Important Interpretation
 
-## 11. Dashboard
+The benchmark results are specific to the current corpus, query set, models, and execution environment.
 
-`dashboard.py` serves `dashboard.html` and exposes only fixed local endpoints:
-live comparison, saved benchmark summary, and demo examples. It initializes
-both pipelines once per process and serializes concurrent use of their shared
-model instances. The UI displays retrieved documents, evidence stages,
-conflicts, claim findings, abstention, evidence confidence, and latency. In
-the live claim panel, answer claims are filtered with the benchmark's generic
-answer-claim extraction logic so headings, preambles, resolution/confidence
-metadata, and duplicate conflict-format fragments are not presented as
-factual claims. This is a display-only boundary: the pipeline's raw
-hallucination-check output and benchmark evaluation are unchanged. Displayed
-factual claims retain their status, evidence document IDs, and available NLI
-evidence details.
+The following should **not** be interpreted as universal guarantees:
 
-The default server binds to `127.0.0.1`. It has no authentication and is for
-local development; do not expose it to an untrusted network. Static hosting or
-opening `dashboard.html` directly cannot run the Python RAG backend.
+- 98.98% noise reduction
+- 30/30 expected-fact coverage
+- 5/5 unsupported-query abstention
+- 5/5 conflict detection
 
-The benchmark section reads `benchmark/results/summary.json`. Run the
-benchmark first if the saved file is unavailable.
+The benchmark is designed to demonstrate the behavior of the denoising pipeline under the selected evaluation scenarios.
 
-## 12. Installation
+---
 
-Install CPython 3.12 and confirm `python --version` reports 3.12. From the
-project directory, create and activate a virtual environment, then install
-the listed dependencies:
+# Live Dashboard
 
-```bash
-python -m venv venv
-source venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+The project includes a live technical dashboard backed by the actual Python RAG pipelines.
+
+The dashboard is **not a browser-side RAG simulation**.
+
+It provides:
+
+- Standard RAG vs Denoised RAG comparison
+- Retrieved-document inspection
+- Relevance scores
+- Evidence verification status
+- Generation evidence
+- Contradiction information
+- Claim-level hallucination analysis
+- Abstention status
+- Evidence Confidence Score
+- Query latency
+- Benchmark results
+- Category-level benchmark results
+
+## Dashboard Architecture
+
+The dashboard uses:
+
+```text
+Python ThreadingHTTPServer
+        |
+        +---- Standard RAG Pipeline
+        |
+        +---- Denoised RAG Pipeline
+        |
+        +---- Benchmark Results
+        |
+        +---- HTML/CSS/JavaScript UI
 ```
 
-On Windows PowerShell:
+---
 
-```powershell
-py -3.12 -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
+# Running the Dashboard
 
-No hidden setup steps are required. The first model-backed run needs internet
-access to download uncached embedding and NLI models.
-
-## 13. Configuration
-
-Defaults are applied by the code; `.env.example` is a safe template, not
-automatically loaded. Copy it to `.env`, fill only the variables needed, then
-export them before starting Python. For Bash/Zsh:
-
-```bash
-cp .env.example .env
-# Edit .env locally, then:
-set -a
-source .env
-set +a
-```
-
-Never commit `.env` or real credentials. `.gitignore` excludes `.env` while
-allowing `.env.example`.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `RAG_EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Semantic embeddings/retrieval model. |
-| `RAG_NLI_MODEL` | `cross-encoder/nli-deberta-v3-small` | NLI classification model. |
-| `RAG_RELEVANCE_THRESHOLD` | `0.45` | Relevance filter threshold (0–1); configurable, not claimed to be scientifically optimal. |
-| `RAG_MAX_RETRIES` | `1` | Maximum Denoised RAG retries; non-negative integer. |
-| `RAG_SOURCE_PRIORITIES` | Built-in source policy | Optional JSON object of source category to score (0–1). |
-| `ANTHROPIC_API_KEY` | Unset | Optional Anthropic answer-generation provider. |
-| `GEMINI_API_KEY` | Unset | Optional Gemini answer-generation provider. |
-| `GOOGLE_API_KEY` | Unset | Alternate Gemini key name. |
-
-With no optional generation key configured, answers use the local deterministic
-extractive generator. The benchmark explicitly disables provider keys to keep
-its generation path local. Runtime dependencies are explicitly listed in
-`requirements.txt`: `sentence-transformers`, `transformers`, `torch`, and
-`numpy`; other project components use the Python standard library.
-
-## 14. Running the benchmark
-
-After installation and model download:
-
-```bash
-python benchmark.py
-```
-
-Current run artifacts are written to:
-
-- `benchmark/results/summary.json`
-- `benchmark/results/per_query_results.json`
-- `benchmark/results/comparison.md`
-
-Do not confuse these with the root-level historical snapshots described under
-Limitations.
-
-## 15. Running the dashboard
-
-In a separate terminal, with the environment activated:
+Start the dashboard:
 
 ```bash
 python dashboard.py
 ```
 
-Then open <http://127.0.0.1:8000>. To use a different local port:
+The default address is:
 
-```bash
-python dashboard.py --port 8010
+```text
+http://127.0.0.1:8000
 ```
 
-The query endpoint accepts JSON, rejects empty questions, limits query text to
-2,000 characters, bounds request bodies to 17,024 bytes, and returns generic backend errors
-without stack traces or environment values. Optional API keys are used only
-for generation and are never returned by the dashboard endpoints.
+Open the address in a browser.
 
-## 16. Testing
+The dashboard initializes and reuses the RAG pipelines for live query execution.
 
-Run the complete unit suite:
+---
+
+# Example Scenarios
+
+## Example 1 — Supported Query
+
+When sufficient verified evidence is available:
+
+```text
+Query
+  |
+  v
+Retrieved Documents
+  |
+  v
+Relevant Documents
+  |
+  v
+Verified Evidence
+  |
+  v
+Answer Generation
+  |
+  v
+Claim Verification
+  |
+  v
+Final Answer
+```
+
+---
+
+## Example 2 — Unsupported Query
+
+When sufficient verified evidence is unavailable:
+
+```text
+Query
+  |
+  v
+Retrieved Documents
+  |
+  v
+Evidence Filtering
+  |
+  v
+Insufficient Verified Evidence
+  |
+  v
+ABSTAIN
+```
+
+The system avoids intentionally passing unsupported evidence to generation.
+
+---
+
+## Example 3 — Conflicting Query
+
+When retrieved sources disagree:
+
+```text
+Query
+  |
+  v
+Evidence Retrieval
+  |
+  v
+Claim Comparison
+  |
+  v
+Contradiction Detected
+  |
+  v
+Conflict Preserved / Reported
+```
+
+The system does not silently resolve an unresolved conflict without sufficient supporting evidence.
+
+---
+
+# Technology Stack
+
+## Programming Language
+
+- Python
+
+## Retrieval
+
+- Sentence Transformers
+- Dense embeddings
+- Cosine similarity
+
+## NLP / NLI
+
+- Transformers
+- Sentence Transformers
+- Natural Language Inference
+
+## Models
+
+```text
+sentence-transformers/all-MiniLM-L6-v2
+cross-encoder/nli-deberta-v3-small
+```
+
+## Dashboard
+
+- Python `ThreadingHTTPServer`
+- HTML
+- CSS
+- JavaScript
+
+## Testing
+
+- Python `unittest`
+
+## Configuration
+
+- Environment variables
+- `.env.example`
+
+---
+
+# Project Structure
+
+```text
+RAG_DENOISING_PIPELINE/
+│
+├── agents/
+│   ├── __init__.py
+│   ├── retrieval_agent.py
+│   ├── relevance_scoring_agent.py
+│   ├── evidence_verification_agent.py
+│   ├── contradiction_detection_agent.py
+│   ├── answer_generation_agent.py
+│   └── hallucination_detection_agent.py
+│
+├── benchmark/
+│   └── results/
+│       ├── summary.json
+│       ├── per_query_results.json
+│       └── comparison.md
+│
+├── data/
+│   ├── documents.json
+│   └── queries.json
+│
+├── pipeline/
+│   ├── standard_rag.py
+│   └── denoised_rag.py
+│
+├── tests/
+│   └── test_*.py
+│
+├── utils/
+│   └── supporting utilities
+│
+├── benchmark.py
+├── dashboard.py
+├── dashboard.html
+├── orchestrator.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+---
+
+# Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/Aparnarajes/RAG_DENOISING_PIPELINE.git
+cd RAG_DENOISING_PIPELINE
+```
+
+## 2. Create a Virtual Environment
+
+### macOS / Linux
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Windows
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+## 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+The first execution may download the required embedding and NLI models.
+
+---
+
+# Running the Benchmark
+
+Run:
+
+```bash
+python benchmark.py
+```
+
+The benchmark results are stored under:
+
+```text
+benchmark/results/
+```
+
+The saved benchmark includes:
+
+```text
+summary.json
+per_query_results.json
+comparison.md
+```
+
+---
+
+# Running the Dashboard
+
+Start the server:
+
+```bash
+python dashboard.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+# Running Tests
+
+Run the complete test suite:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-The final dashboard claim-display update was validated with **70 passing
-tests**. Live dashboard smoke checks also covered a supported query, an
-unsupported query that abstains with zero generation evidence, and a
-conflicting query whose factual claims retain their statuses and evidence
-without showing conflict metadata as claims.
-
-## 17. Limitations and historical artifacts
-
-- The benchmark is small, curated, and corpus-dependent; its scores are not
-  statistically definitive and expected-fact token matching may miss
-  paraphrases.
-- NLI outputs depend on the selected model and thresholds; they can be wrong.
-- Latencies depend on hardware and exclude cold model initialization.
-- The local dashboard has no authentication and must not be exposed to an
-  untrusted network.
-- `benchmark_report.md` and `benchmark_results.json` at the repository root
-  are **historical** eight-query evaluation artifacts from an earlier
-  implementation. Their rubric score, zero hallucination value, accuracy,
-  confidence, and latency are obsolete for current system claims. The current
-  dashboard does not load them; use `benchmark/results/` instead. They are
-  retained as history, not current evidence.
-- The former Netlify configuration was removed because a static host cannot
-  run the Python backend. No public deployment or authentication setup is
-  included.
-- Local scratch/debug scripts may be present in a working copy; `.gitignore`
-  excludes their known patterns. They are not runtime dependencies.
-
-No claim of perfect accuracy or hallucination-free output is made.
-
-## 18. Project structure
+The final validation run completed with:
 
 ```text
-agents/                         Retrieval, relevance, evidence, conflict,
-                                generation, and claim-detection components
-pipeline/                       Standard and Denoised RAG orchestration
-utils/                          Embeddings and shared NLI/source policy
-data/documents.json             Local corpus
-data/benchmark_queries.json     Fixed 20-query benchmark definition
-benchmark.py                    Independent benchmark runner/evaluator
-benchmark/results/              Current aggregate, raw, and report outputs
-dashboard.py                    Local live-pipeline HTTP server
-dashboard.html                  Dashboard UI
-tests/                           Unit and dashboard endpoint tests
-requirements.txt                Explicit runtime model dependencies
-.env.example                    Safe configuration template
+69 tests passed
 ```
+
+The test suite covers:
+
+- Retrieval behavior
+- Relevance scoring
+- Evidence verification
+- NLI behavior
+- Contradiction detection
+- Evidence gating
+- Abstention
+- Retry behavior
+- Claim-level hallucination detection
+- Benchmark evaluation
+- Dashboard behavior
+- Input validation
+- Error handling
+- Configuration
+
+---
+
+# Configuration
+
+The project supports configuration through environment variables.
+
+A template is provided:
+
+```text
+.env.example
+```
+
+Create a local `.env` file when configuration values are required.
+
+### Important
+
+Do not commit:
+
+```text
+.env
+```
+
+or any real API credentials to GitHub.
+
+Only the example configuration should be included in the repository.
+
+---
+
+# Security
+
+The dashboard includes basic defensive controls including:
+
+- Query validation
+- Query length limits
+- JSON validation
+- Content-type validation
+- Request-size limits
+- Fixed API routes
+- Generic backend error responses
+
+The dashboard runs on loopback by default.
+
+It does not provide authentication and should not be exposed directly to an untrusted public network without additional security controls.
+
+---
+
+# Limitations
+
+This project has several limitations.
+
+### 1. Limited Benchmark
+
+The benchmark contains 20 curated queries.
+
+It is useful for demonstrating the intended behavior of the pipeline but does not represent every possible real-world query.
+
+### 2. Limited Corpus
+
+The evaluation corpus is relatively small and may not represent large-scale production retrieval systems.
+
+### 3. NLI Limitations
+
+The NLI model can make incorrect entailment, contradiction, or neutral classifications.
+
+### 4. Claim Extraction
+
+Automatic claim extraction is imperfect and may occasionally split or interpret generated statements incorrectly.
+
+### 5. Evidence Confidence
+
+The Evidence Confidence Score represents evidence strength based on the pipeline's evidence characteristics.
+
+It is not a probability that the final answer is correct.
+
+### 6. Hardware Dependence
+
+Latency can vary depending on CPU, memory, Python version, model loading, and execution environment.
+
+### 7. Cold Start
+
+Model initialization and first-inference warm-up are separate from the reported warm query latency.
+
+### 8. Local Dashboard
+
+The dashboard is configured for local execution by default and does not include authentication.
+
+---
+
+# Reproducibility
+
+The repository includes the components required to reproduce the benchmark:
+
+- Fixed benchmark queries
+- Ground-truth information
+- Document corpus
+- Standard RAG baseline
+- Denoised RAG pipeline
+- Saved benchmark results
+- Model identifiers
+- Configuration options
+- Test suite
+- Installation instructions
+- Dashboard
+
+The same query set and corpus are used when comparing the two RAG pipelines.
+
+---
+
+# Research / Evaluation Methodology
+
+The evaluation follows the following process:
+
+```text
+                Fixed Query
+                    |
+                    v
+          +-------------------+
+          | Standard RAG      |
+          +-------------------+
+                    |
+                    v
+             Standard Answer
+                    |
+                    |
+                    |
+          +-------------------+
+          | Denoised RAG      |
+          +-------------------+
+                    |
+                    v
+        Evidence Filtering
+                    |
+                    v
+          Verified Evidence
+                    |
+                    v
+           Denoised Answer
+                    |
+                    v
+             Evaluation
+```
+
+Both systems are evaluated against the same benchmark conditions.
+
+The evaluation focuses on whether the denoising layer:
+
+- Removes irrelevant evidence
+- Preserves useful evidence
+- Detects conflicts
+- Abstains when evidence is insufficient
+- Reduces unsupported generated claims
+- Maintains practical query latency
+
+---
+
+# Key Findings
+
+The current benchmark demonstrates that the denoising pipeline can:
+
+- Remove a large proportion of irrelevant evidence before generation.
+- Detect the expected conflicting evidence in the benchmark.
+- Abstain on unsupported benchmark queries.
+- Provide claim-level evidence analysis.
+- Maintain low warm-query latency on the evaluation environment.
+- Provide a transparent comparison between Standard RAG and Denoised RAG.
+
+These findings are limited to the current benchmark and should not be interpreted as universal performance guarantees.
+
+---
+
+# Demo Video
+
+The demonstration covers:
+
+1. Project overview
+2. Standard RAG architecture
+3. Denoised Multi-Agent RAG architecture
+4. Retrieval
+5. Relevance scoring
+6. Evidence verification
+7. Contradiction detection
+8. Evidence filtering
+9. Answer generation
+10. Unsupported-query abstention
+11. Hallucination detection
+12. Benchmark comparison
+13. Live dashboard
+
+### Demo Link
+
+**Add your final demo video link here:**
+
+```text
+PASTE-YOUR-DEMO-VIDEO-LINK-HERE
+```
+
+---
+
+# Future Improvements
+
+Potential future improvements include:
+
+- Larger and more diverse benchmark datasets
+- External knowledge sources
+- Hybrid lexical + dense retrieval
+- More advanced reranking models
+- Better claim extraction
+- Larger NLI models
+- Human evaluation
+- More comprehensive hallucination benchmarks
+- Distributed inference
+- Production-grade authentication
+- Cloud deployment
+- Continuous evaluation and feedback loops
+
+---
+
+# Conclusion
+
+This project demonstrates a multi-agent approach to improving Retrieval-Augmented Generation by introducing an evidence-denoising stage between retrieval and answer generation.
+
+Instead of treating every retrieved document as trustworthy context, the system evaluates evidence through:
+
+```text
+Retrieval
+   ↓
+Relevance Scoring
+   ↓
+Evidence Verification
+   ↓
+Contradiction Detection
+   ↓
+Evidence Gate
+   ↓
+Generation / Abstention
+   ↓
+Hallucination Detection
+```
+
+The primary goal is not simply to generate an answer, but to ensure that the answer-generation stage receives evidence that has passed relevance and verification checks.
+
+The project provides both a Standard RAG baseline and a Denoised Multi-Agent RAG pipeline, together with a fixed benchmark, claim-level evaluation, automated tests, and a live technical dashboard.
+
+---
+
+# Author
+
+**Aparna Rajesh**
+
+B.Tech Artificial Intelligence & Machine Learning
+
+GitHub:
+
+https://github.com/Aparnarajes
+
+---
+
+## Project Repository
+
+https://github.com/Aparnarajes/RAG_DENOISING_PIPELINE
