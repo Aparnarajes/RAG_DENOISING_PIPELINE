@@ -93,6 +93,15 @@ This project addresses this problem by introducing an evidence-denoising layer b
 
 ---
 
+## 🎥 Demo Video
+
+Watch the complete project demonstration on YouTube:
+
+▶️ **[RAG Denoised Pipeline – Demo Video](https://youtu.be/d8zOWmmobGY)**
+
+The demo covers the RAG denoising pipeline, document retrieval, relevance scoring, answer generation, hallucination detection, and evaluation workflow.
+
+
 ## Solution Overview
 
 The project implements a multi-stage evidence-filtering pipeline.
