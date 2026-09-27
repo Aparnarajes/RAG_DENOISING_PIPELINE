@@ -721,12 +721,8 @@ http://127.0.0.1:8000
 ```bash
 python -m unittest discover -s tests -v
 ```
+The current test suite contains 73 tests, all passing.
 
-The final validation run completed with:
-
-```text
-69 tests passed
-```
 
 Test coverage includes: retrieval behavior, relevance scoring, evidence verification, NLI behavior, contradiction detection, evidence gating, abstention, retry behavior, claim-level hallucination detection, benchmark evaluation, dashboard behavior, input validation, error handling, and configuration.
 
