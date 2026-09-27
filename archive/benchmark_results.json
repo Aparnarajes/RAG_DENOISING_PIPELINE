@@ -1,0 +1,1067 @@
+{
+  "historical": true,
+  "historical_note": "Eight-query result from an earlier implementation and obsolete metric definitions. Not current benchmark evidence; use benchmark/results/summary.json.",
+  "aggregates": {
+    "precision": [
+      0.229,
+      0.844
+    ],
+    "recall": [
+      1.0,
+      1.0
+    ],
+    "noise_docs": [
+      4.625,
+      0.375
+    ],
+    "unreliable_docs": [
+      2.875,
+      0
+    ],
+    "accuracy": [
+      0.681,
+      0.749
+    ],
+    "fact_coverage": [
+      0.875,
+      0.85
+    ],
+    "hallucination_rate": [
+      0.474,
+      0.0
+    ],
+    "supported_ratio": [
+      0.526,
+      1.0
+    ],
+    "confidence": [
+      0.086,
+      0.766
+    ],
+    "latency_ms": [
+      1.0,
+      4.0
+    ]
+  },
+  "composite_score": {
+    "total_score": 89.0,
+    "max_score": 100.0,
+    "breakdown": {
+      "retrieval_precision_pts": 16.9,
+      "noise_reduction_pts": 18.4,
+      "answer_accuracy_pts": 18.7,
+      "hallucination_reduction_pts": 20.0,
+      "system_latency_pts": 15.0
+    }
+  },
+  "rows": [
+    {
+      "id": "q0",
+      "query": "What are the main causes of climate change?",
+      "ground_truth_answer": "Climate change is primarily caused by human activities that increase greenhouse gas concentrations in the atmosphere. The major contributors include burning fossil fuels such as coal, oil, and natural gas, deforestation and land-use changes, and certain agricultural and industrial activities.",
+      "key_facts": [
+        "human activities",
+        "greenhouse gas concentrations",
+        "burning fossil fuels",
+        "coal, oil, and natural gas",
+        "deforestation"
+      ],
+      "standard_final_answer": "Retrieved information for \"What are the main causes of climate change?\":\n\u2022 The primary cause of climate change is the increase in greenhouse gases from electricity generation, transportation, industry, agriculture, and deforestation, trapping heat in the atmosphere. [D4]\n\u2022 [UNVERIFIED / CONFLICTING] Some people believe climate change is a natural cycle and not caused by humans. Historical climate variations show that temperatures fluctuate naturally without industrial emissions. [D3]\n\u2022 Climate change is mainly caused by human activities such as burning fossil fuels like coal, oil, and gas, which release heat-trapping greenhouse gases into Earth's atmosphere. [D1]\n\u2022 Human activities, especially emissions of greenhouse gases, are the primary cause of global warming observed over the past century. Carbon dioxide and methane concentrations have risen to unprecedented levels. [D2]\n\u2022 Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whereas climate represents average weather patterns over decades. [D5]\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"What are the main causes of climate change?\":\n\u2022 The primary cause of climate change is the increase in greenhouse gases from electricity generation, transportation, industry, agriculture, and deforestation, trapping heat in the atmosphere. [D4]\n\u2022 Climate change is mainly caused by human activities such as burning fossil fuels like coal, oil, and gas, which release heat-trapping greenhouse gases into Earth's atmosphere. [D1]\n\u2022 Human activities, especially emissions of greenhouse gases, are the primary cause of global warming observed over the past century. Carbon dioxide and methane concentrations have risen to unprecedented levels. [D2]\n\u2022 Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whereas climate represents average weather patterns over decades. [D5]",
+      "standard_citations": [
+        "D4",
+        "D3",
+        "D1",
+        "D2",
+        "D5",
+        "d1"
+      ],
+      "denoised_citations": [
+        "D4",
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "D4",
+          "source": "EPA",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.542,
+          "claim_snippet": "The primary cause of climate change is the increase in greenhouse gases from electricity generation, transportation, ind..."
+        },
+        {
+          "doc_id": "D1",
+          "source": "NASA",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.361,
+          "claim_snippet": "Climate change is mainly caused by human activities such as burning fossil fuels like coal, oil, and gas, which release ..."
+        },
+        {
+          "doc_id": "D2",
+          "source": "IPCC",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.234,
+          "claim_snippet": "Human activities, especially emissions of greenhouse gases, are the primary cause of global warming observed over the pa..."
+        },
+        {
+          "doc_id": "D5",
+          "source": "Weather News",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.225,
+          "claim_snippet": "Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whe..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "D4",
+          "relevance_score": 0.542,
+          "reasoning": "sim=0.364, overlap=0.600, intent=matches query intent (climate) -> relevance=0.542 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D3",
+          "relevance_score": 0.389,
+          "reasoning": "sim=0.217, overlap=0.400, intent=matches query intent (climate) -> relevance=0.389 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D1",
+          "relevance_score": 0.361,
+          "reasoning": "sim=0.163, overlap=0.400, intent=matches query intent (climate) -> relevance=0.361 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D2",
+          "relevance_score": 0.234,
+          "reasoning": "sim=0.068, overlap=0.200, intent=matches query intent (climate) -> relevance=0.234 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D5",
+          "relevance_score": 0.225,
+          "reasoning": "sim=0.050, overlap=0.200, intent=matches query intent (climate) -> relevance=0.225 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d1",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.000, overlap=0.000, intent=misses core query intent (climate) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.5,
+      "denoised_precision": 0.75,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 3,
+      "denoised_noise_docs": 1,
+      "noise_reduction_pct": 66.7,
+      "standard_unreliable_docs_passed": 1,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1154,
+      "denoised_context_chars": 757,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 0.8,
+      "standard_gt_similarity": 0.404,
+      "denoised_gt_similarity": 0.432,
+      "standard_accuracy": 0.762,
+      "denoised_accuracy": 0.653,
+      "standard_supported_ratio": 0.875,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.125,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.125,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Some people believe climate change is a natural cycle and not caused by humans.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicts NASA/IPCC consensus on anthropogenic global warming",
+          "matched_pattern": "natural cycle and not caused by humans"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0027,
+      "denoised_latency": 0.0034,
+      "standard_confidence": 0.3,
+      "denoised_confidence": 0.703,
+      "denoised_feedback_loop_triggered": false,
+      "feedback_loop_details": {
+        "triggered": false
+      }
+    },
+    {
+      "id": "q1",
+      "query": "How long does it take to fast charge an EV battery?",
+      "ground_truth_answer": "Fast charging an EV lithium-ion battery from 20% to 80% state of charge typically takes 20 to 40 minutes on a 150 kW or faster DC charger, dependent on active thermal management.",
+      "key_facts": [
+        "20 to 40 minutes",
+        "20 percent to 80 percent",
+        "150 kW or faster DC fast charger",
+        "thermal management"
+      ],
+      "standard_final_answer": "Retrieved information for \"How long does it take to fast charge an EV battery?\":\n\u2022 [UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them. [d3]\n\u2022 Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 minutes on a 150 kW or faster DC fast charger, depending on battery chemistry and thermal management. [d2]\n\u2022 Battery thermal management systems, including liquid cooling loops, are critical for maintaining fast charging speed and long term battery health in modern EVs. [d14]\n\u2022 [UNVERIFIED / CONFLICTING] EV batteries typically lose 50 percent of their capacity within the first two years of ownership regardless of usage patterns, making them a poor long term investment. [d7]\n\u2022 [UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data. [d12]\n\u2022 [UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years. [d17]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"How long does it take to fast charge an EV battery?\":\n\u2022 Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 minutes on a 150 kW or faster DC fast charger, depending on battery chemistry and thermal management. [d2]\n\u2022 Battery thermal management systems, including liquid cooling loops, are critical for maintaining fast charging speed and long term battery health in modern EVs. [d14]",
+      "standard_citations": [
+        "d3",
+        "d2",
+        "d14",
+        "d7",
+        "d12",
+        "d17"
+      ],
+      "denoised_citations": [
+        "d2",
+        "d14"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d2",
+          "source": "BatteryUniversity.com",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.55,
+          "claim_snippet": "Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 ..."
+        },
+        {
+          "doc_id": "d14",
+          "source": "MIT Technology Review",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.451,
+          "claim_snippet": "Battery thermal management systems, including liquid cooling loops, are critical for maintaining fast charging speed and..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d2",
+          "relevance_score": 0.55,
+          "reasoning": "sim=0.221, overlap=0.800, intent=matches query intent (charging) -> relevance=0.550 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d14",
+          "relevance_score": 0.451,
+          "reasoning": "sim=0.182, overlap=0.600, intent=matches query intent (charging) -> relevance=0.451 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d3",
+          "relevance_score": 0.414,
+          "reasoning": "sim=0.269, overlap=0.400, intent=matches query intent (charging) -> relevance=0.414 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d7",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.167, overlap=0.400, intent=misses core query intent (charging) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d12",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.110, overlap=0.200, intent=misses core query intent (charging) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d17",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.104, overlap=0.200, intent=misses core query intent (charging) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.333,
+      "denoised_precision": 1.0,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 4,
+      "denoised_noise_docs": 0,
+      "noise_reduction_pct": 100.0,
+      "standard_unreliable_docs_passed": 4,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 965,
+      "denoised_context_chars": 381,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 1.0,
+      "standard_gt_similarity": 0.507,
+      "denoised_gt_similarity": 0.696,
+      "standard_accuracy": 0.803,
+      "denoised_accuracy": 0.878,
+      "standard_supported_ratio": 0.333,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.667,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.667,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "Violates physical DC fast charging C-rates; unsupported claim",
+          "matched_pattern": "under 5 minutes"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] EV batteries typically lose 50 percent of their capacity within the first two years of ownership regardless of usage patterns, making them a poor long term investment.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicts warranty data (>=70% retained after 8 yrs)",
+          "matched_pattern": "lose 50 percent of their capacity within the first two years"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicted by NTSB vehicle fire statistics",
+          "matched_pattern": "100 times more common"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; average pack cost was $115/kWh in 2024",
+          "matched_pattern": "exceed 800 dollars per kilowatt-hour"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0011,
+      "denoised_latency": 0.0027,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.775,
+      "denoised_feedback_loop_triggered": false,
+      "feedback_loop_details": {
+        "triggered": false
+      }
+    },
+    {
+      "id": "q2",
+      "query": "Are solid-state batteries used in electric cars today?",
+      "ground_truth_answer": "No, solid-state batteries are not in mass-market electric vehicles today; commercial-scale manufacturing hurdles have delayed deployment beyond 2027.",
+      "key_facts": [
+        "delayed beyond 2027",
+        "commercial-scale manufacturing challenges",
+        "higher energy density"
+      ],
+      "standard_final_answer": "Retrieved information for \"Are solid-state batteries used in electric cars today?\":\n\u2022 [UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry. [d5]\n\u2022 Solid-state batteries promise higher energy density than conventional lithium-ion cells by replacing the liquid electrolyte with a solid one, but commercial-scale manufacturing challenges have delayed mass deployment beyond 2027 for most automakers. [d4]\n\u2022 [UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows. [d16]\n\u2022 [UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data. [d12]\n\u2022 Most EV battery warranties in the United States guarantee at least 70 percent of original capacity retained after 8 years or 100,000 miles, whichever comes first. [d6]\n\u2022 Fast charging an EV lithium-ion battery from 20 percent to 80 percent state of charge typically takes between 20 and 40 minutes on a 150 kW or faster DC fast charger, depending on battery chemistry and thermal management. [d2]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"Are solid-state batteries used in electric cars today? solid state completely replac\":\n\u2022 Solid-state batteries promise higher energy density than conventional lithium-ion cells by replacing the liquid electrolyte with a solid one, but commercial-scale manufacturing challenges have delayed mass deployment beyond 2027 for most automakers. [d4]",
+      "standard_citations": [
+        "d5",
+        "d4",
+        "d16",
+        "d12",
+        "d6",
+        "d2"
+      ],
+      "denoised_citations": [
+        "d4"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d4",
+          "source": "Nature Energy 2023",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.454,
+          "claim_snippet": "Solid-state batteries promise higher energy density than conventional lithium-ion cells by replacing the liquid electrol..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d5",
+          "relevance_score": 0.717,
+          "reasoning": "sim=0.527, overlap=0.833, intent=matches query intent (solid_state) -> relevance=0.717 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d4",
+          "relevance_score": 0.432,
+          "reasoning": "sim=0.225, overlap=0.500, intent=matches query intent (solid_state) -> relevance=0.432 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d16",
+          "relevance_score": 0.042,
+          "reasoning": "sim=0.185, overlap=0.500, intent=misses core query intent (solid_state) -> relevance=0.042 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d12",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.072, overlap=0.333, intent=misses core query intent (solid_state) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d6",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.056, overlap=0.333, intent=misses core query intent (solid_state) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d2",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.052, overlap=0.333, intent=misses core query intent (solid_state) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 1.0,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 0,
+      "noise_reduction_pct": 100.0,
+      "standard_unreliable_docs_passed": 3,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1039,
+      "denoised_context_chars": 249,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 1.0,
+      "standard_gt_similarity": 0.346,
+      "denoised_gt_similarity": 0.578,
+      "standard_accuracy": 0.738,
+      "denoised_accuracy": 0.831,
+      "standard_supported_ratio": 0.5,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.5,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.5,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; solid-state batteries are not yet in commercial production",
+          "matched_pattern": "already in every electric car"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; EVs operate in winter with partial range drop",
+          "matched_pattern": "completely stop working in cold"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicted by NTSB vehicle fire statistics",
+          "matched_pattern": "100 times more common"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0012,
+      "denoised_latency": 0.0049,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.754,
+      "denoised_feedback_loop_triggered": true,
+      "feedback_loop_details": {
+        "triggered": true,
+        "reason": "Low initial confidence or sparse surviving evidence",
+        "original_confidence": 0.744,
+        "expanded_query": "Are solid-state batteries used in electric cars today? solid state completely replac",
+        "retry_confidence": 0.754,
+        "improved": true
+      }
+    },
+    {
+      "id": "q3",
+      "query": "How much capacity do EV batteries lose over time?",
+      "ground_truth_answer": "EV batteries degrade gradually; standard US manufacturer warranties guarantee at least 70% capacity retention after 8 years or 100,000 miles.",
+      "key_facts": [
+        "at least 70 percent",
+        "8 years or 100,000 miles",
+        "warranties guarantee"
+      ],
+      "standard_final_answer": "Retrieved information for \"How much capacity do EV batteries lose over time?\":\n\u2022 [UNVERIFIED / CONFLICTING] EV batteries typically lose 50 percent of their capacity within the first two years of ownership regardless of usage patterns, making them a poor long term investment. [d7]\n\u2022 [UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data. [d12]\n\u2022 Most EV battery warranties in the United States guarantee at least 70 percent of original capacity retained after 8 years or 100,000 miles, whichever comes first. [d6]\n\u2022 [UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them. [d3]\n\u2022 [UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows. [d16]\n\u2022 Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs using hydrometallurgical processes, reducing dependence on newly mined materials. [d10]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"How much capacity do EV batteries lose over time? year 100 ev battery\":\n\u2022 Most EV battery warranties in the United States guarantee at least 70 percent of original capacity retained after 8 years or 100,000 miles, whichever comes first. [d6]",
+      "standard_citations": [
+        "d7",
+        "d12",
+        "d6",
+        "d3",
+        "d16",
+        "d10"
+      ],
+      "denoised_citations": [
+        "d6"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d6",
+          "source": "US DOE Vehicle Technologies Office",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.527,
+          "claim_snippet": "Most EV battery warranties in the United States guarantee at least 70 percent of original capacity retained after 8 year..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d7",
+          "relevance_score": 0.472,
+          "reasoning": "sim=0.248, overlap=0.571, intent=matches query intent (degradation) -> relevance=0.472 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d6",
+          "relevance_score": 0.375,
+          "reasoning": "sim=0.168, overlap=0.429, intent=matches query intent (degradation) -> relevance=0.375 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d3",
+          "relevance_score": 0.29,
+          "reasoning": "sim=0.111, overlap=0.286, intent=matches query intent (degradation) -> relevance=0.290 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d12",
+          "relevance_score": 0.03,
+          "reasoning": "sim=0.217, overlap=0.429, intent=misses core query intent (degradation) -> relevance=0.030 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d16",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.110, overlap=0.429, intent=misses core query intent (degradation) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d10",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.091, overlap=0.429, intent=misses core query intent (degradation) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 1.0,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 0,
+      "noise_reduction_pct": 100.0,
+      "standard_unreliable_docs_passed": 4,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 940,
+      "denoised_context_chars": 162,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 1.0,
+      "standard_gt_similarity": 0.356,
+      "denoised_gt_similarity": 0.636,
+      "standard_accuracy": 0.742,
+      "denoised_accuracy": 0.854,
+      "standard_supported_ratio": 0.333,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.667,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.667,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] EV batteries typically lose 50 percent of their capacity within the first two years of ownership regardless of usage patterns, making them a poor long term investment.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicts warranty data (>=70% retained after 8 yrs)",
+          "matched_pattern": "lose 50 percent of their capacity within the first two years"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicted by NTSB vehicle fire statistics",
+          "matched_pattern": "100 times more common"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "Violates physical DC fast charging C-rates; unsupported claim",
+          "matched_pattern": "under 5 minutes"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; EVs operate in winter with partial range drop",
+          "matched_pattern": "completely stop working in cold"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0009,
+      "denoised_latency": 0.0044,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.787,
+      "denoised_feedback_loop_triggered": true,
+      "feedback_loop_details": {
+        "triggered": true,
+        "reason": "Low initial confidence or sparse surviving evidence",
+        "original_confidence": 0.719,
+        "expanded_query": "How much capacity do EV batteries lose over time? year 100 ev battery",
+        "retry_confidence": 0.787,
+        "improved": true
+      }
+    },
+    {
+      "id": "q4",
+      "query": "Are electric vehicles more likely to catch fire than gas cars?",
+      "ground_truth_answer": "No, data compiled from insurance claims and the NTSB shows electric vehicles catch fire at a substantially lower rate per 100,000 vehicles than gasoline-powered cars.",
+      "key_facts": [
+        "substantially lower rate",
+        "per 100,000 vehicles sold",
+        "harder to extinguish once started"
+      ],
+      "standard_final_answer": "Retrieved information for \"Are electric vehicles more likely to catch fire than gas cars?\":\n\u2022 Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start. [d13]\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]\n\u2022 [UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry. [d5]\n\u2022 [UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows. [d16]\n\u2022 Climate change is mainly caused by human activities such as burning fossil fuels like coal, oil, and gas, which release heat-trapping greenhouse gases into Earth's atmosphere. [D1]\n\u2022 [UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data. [d12]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"Are electric vehicles more likely to catch fire than gas cars? sold\":\n\u2022 Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start. [d13]",
+      "standard_citations": [
+        "d13",
+        "d1",
+        "d5",
+        "d16",
+        "D1",
+        "d12"
+      ],
+      "denoised_citations": [
+        "d13"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d13",
+          "source": "National Transportation Safety Board Report",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.621,
+          "claim_snippet": "Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,00..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d13",
+          "relevance_score": 0.613,
+          "reasoning": "sim=0.285, overlap=0.875, intent=matches query intent (fire) -> relevance=0.613 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d12",
+          "relevance_score": 0.301,
+          "reasoning": "sim=0.063, overlap=0.375, intent=matches query intent (fire) -> relevance=0.301 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D1",
+          "relevance_score": 0.159,
+          "reasoning": "sim=0.078, overlap=0.000, intent=matches query intent (fire) -> relevance=0.159 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d1",
+          "relevance_score": 0.025,
+          "reasoning": "sim=0.149, overlap=0.500, intent=misses core query intent (fire) -> relevance=0.025 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d5",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.116, overlap=0.125, intent=misses core query intent (fire) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d16",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.114, overlap=0.125, intent=misses core query intent (fire) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 1.0,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 0,
+      "noise_reduction_pct": 100.0,
+      "standard_unreliable_docs_passed": 3,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1025,
+      "denoised_context_chars": 228,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 1.0,
+      "standard_gt_similarity": 0.446,
+      "denoised_gt_similarity": 0.79,
+      "standard_accuracy": 0.778,
+      "denoised_accuracy": 0.916,
+      "standard_supported_ratio": 0.5,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.5,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.5,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; solid-state batteries are not yet in commercial production",
+          "matched_pattern": "already in every electric car"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; EVs operate in winter with partial range drop",
+          "matched_pattern": "completely stop working in cold"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicted by NTSB vehicle fire statistics",
+          "matched_pattern": "100 times more common"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0014,
+      "denoised_latency": 0.0044,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.829,
+      "denoised_feedback_loop_triggered": true,
+      "feedback_loop_details": {
+        "triggered": true,
+        "reason": "Low initial confidence or sparse surviving evidence",
+        "original_confidence": 0.826,
+        "expanded_query": "Are electric vehicles more likely to catch fire than gas cars? sold",
+        "retry_confidence": 0.829,
+        "improved": true
+      }
+    },
+    {
+      "id": "q5",
+      "query": "What happens to EV batteries after they are retired from vehicles?",
+      "ground_truth_answer": "Retired EV batteries undergo recycling using hydrometallurgical processes that recover over 90% of critical materials including lithium, cobalt, and nickel.",
+      "key_facts": [
+        "recover over 90 percent",
+        "lithium, cobalt, and nickel",
+        "hydrometallurgical processes",
+        "recycling"
+      ],
+      "standard_final_answer": "Retrieved information for \"What happens to EV batteries after they are retired from vehicles?\":\n\u2022 Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start. [d13]\n\u2022 Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs using hydrometallurgical processes, reducing dependence on newly mined materials. [d10]\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]\n\u2022 [UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them. [d3]\n\u2022 [UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data. [d12]\n\u2022 [UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years. [d17]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"What happens to EV batteries after they are retired from vehicles?\":\n\u2022 Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs using hydrometallurgical processes, reducing dependence on newly mined materials. [d10]\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]",
+      "standard_citations": [
+        "d13",
+        "d10",
+        "d1",
+        "d3",
+        "d12",
+        "d17"
+      ],
+      "denoised_citations": [
+        "d10",
+        "d1"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d10",
+          "source": "Reuters",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.319,
+          "claim_snippet": "Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs u..."
+        },
+        {
+          "doc_id": "d1",
+          "source": "IEA Global EV Outlook 2025",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.312,
+          "claim_snippet": "Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, conti..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d10",
+          "relevance_score": 0.319,
+          "reasoning": "sim=0.131, overlap=0.333, intent=matches query intent (recycling) -> relevance=0.319 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d1",
+          "relevance_score": 0.312,
+          "reasoning": "sim=0.116, overlap=0.333, intent=matches query intent (recycling) -> relevance=0.312 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d13",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.234, overlap=0.333, intent=misses core query intent (recycling) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d3",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.160, overlap=0.200, intent=misses core query intent (recycling) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d12",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.146, overlap=0.133, intent=misses core query intent (recycling) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d17",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.139, overlap=0.133, intent=misses core query intent (recycling) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 0.5,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 1,
+      "noise_reduction_pct": 80.0,
+      "standard_unreliable_docs_passed": 3,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1060,
+      "denoised_context_chars": 415,
+      "standard_fact_coverage": 1.0,
+      "denoised_fact_coverage": 1.0,
+      "standard_gt_similarity": 0.293,
+      "denoised_gt_similarity": 0.43,
+      "standard_accuracy": 0.717,
+      "denoised_accuracy": 0.772,
+      "standard_supported_ratio": 0.5,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.5,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.5,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] My cousin says EV batteries fully charge from empty to full in under 5 minutes on any charger and never degrade at all, no matter how you charge them.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "Violates physical DC fast charging C-rates; unsupported claim",
+          "matched_pattern": "under 5 minutes"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Government sources confirm EV battery fires are 100 times more common than gasoline car fires and manufacturers are hiding the data.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; contradicted by NTSB vehicle fire statistics",
+          "matched_pattern": "100 times more common"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; average pack cost was $115/kWh in 2024",
+          "matched_pattern": "exceed 800 dollars per kilowatt-hour"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0013,
+      "denoised_latency": 0.0026,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.692,
+      "denoised_feedback_loop_triggered": false,
+      "feedback_loop_details": {
+        "triggered": false
+      }
+    },
+    {
+      "id": "q6",
+      "query": "How does cold winter weather affect electric vehicle range?",
+      "ground_truth_answer": "Cold winter temperatures temporarily reduce EV driving range by 20% to 30% due to cabin heating demands and slower battery electrochemistry.",
+      "key_facts": [
+        "reduce driving range by 20 to 30 percent",
+        "cabin heating",
+        "battery electrochemistry slows down"
+      ],
+      "standard_final_answer": "Retrieved information for \"How does cold winter weather affect electric vehicle range?\":\n\u2022 Cold winter temperatures temporarily reduce EV driving range by 20 to 30 percent, primarily because energy is diverted to heat the passenger cabin and battery electrochemistry slows down in sub-freezing weather. [d15]\n\u2022 Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start. [d13]\n\u2022 [UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows. [d16]\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]\n\u2022 Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whereas climate represents average weather patterns over decades. [D5]\n\u2022 [UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry. [d5]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"How does cold winter weather affect electric vehicle range?\":\n\u2022 Cold winter temperatures temporarily reduce EV driving range by 20 to 30 percent, primarily because energy is diverted to heat the passenger cabin and battery electrochemistry slows down in sub-freezing weather. [d15]\n\u2022 Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whereas climate represents average weather patterns over decades. [D5]",
+      "standard_citations": [
+        "d15",
+        "d13",
+        "d16",
+        "d1",
+        "D5",
+        "d5"
+      ],
+      "denoised_citations": [
+        "d15",
+        "D5"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d15",
+          "source": "AAA Automotive Research",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.613,
+          "claim_snippet": "Cold winter temperatures temporarily reduce EV driving range by 20 to 30 percent, primarily because energy is diverted t..."
+        },
+        {
+          "doc_id": "D5",
+          "source": "Weather News",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.209,
+          "claim_snippet": "Weather refers to short-term atmospheric conditions such as temperature and rainfall occurring over minutes to days, whe..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d15",
+          "relevance_score": 0.613,
+          "reasoning": "sim=0.276, overlap=0.889, intent=matches query intent (winter) -> relevance=0.613 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d16",
+          "relevance_score": 0.352,
+          "reasoning": "sim=0.108, overlap=0.444, intent=matches query intent (winter) -> relevance=0.352 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "D5",
+          "relevance_score": 0.209,
+          "reasoning": "sim=0.089, overlap=0.111, intent=matches query intent (winter) -> relevance=0.209 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d13",
+          "relevance_score": 0.018,
+          "reasoning": "sim=0.180, overlap=0.444, intent=misses core query intent (winter) -> relevance=0.018 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d1",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.126, overlap=0.444, intent=misses core query intent (winter) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d5",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.045, overlap=0.111, intent=misses core query intent (winter) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 0.5,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 1,
+      "noise_reduction_pct": 80.0,
+      "standard_unreliable_docs_passed": 2,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1111,
+      "denoised_context_chars": 393,
+      "standard_fact_coverage": 0.667,
+      "denoised_fact_coverage": 0.667,
+      "standard_gt_similarity": 0.367,
+      "denoised_gt_similarity": 0.569,
+      "standard_accuracy": 0.547,
+      "denoised_accuracy": 0.628,
+      "standard_supported_ratio": 0.667,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.333,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.333,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; EVs operate in winter with partial range drop",
+          "matched_pattern": "completely stop working in cold"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; solid-state batteries are not yet in commercial production",
+          "matched_pattern": "already in every electric car"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0015,
+      "denoised_latency": 0.0024,
+      "standard_confidence": 0.088,
+      "denoised_confidence": 0.735,
+      "denoised_feedback_loop_triggered": false,
+      "feedback_loop_details": {
+        "triggered": false
+      }
+    },
+    {
+      "id": "q7",
+      "query": "What is the average cost of an electric vehicle battery pack per kilowatt-hour?",
+      "ground_truth_answer": "Lithium-ion battery pack prices fell to an average of $115 per kilowatt-hour in 2024, continuing a long-term cost reduction trend.",
+      "key_facts": [
+        "115 dollars per kilowatt-hour",
+        "in 2024",
+        "decade-long decline"
+      ],
+      "standard_final_answer": "Retrieved information for \"What is the average cost of an electric vehicle battery pack per kilowatt-hour?\":\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]\n\u2022 [UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years. [d17]\n\u2022 Data compiled from insurance claims indicates that electric vehicles catch fire at a substantially lower rate per 100,000 vehicles sold than gasoline-powered vehicles, though EV fires can be harder to extinguish once they start. [d13]\n\u2022 Battery recycling companies can recover over 90 percent of the lithium, cobalt, and nickel from spent EV battery packs using hydrometallurgical processes, reducing dependence on newly mined materials. [d10]\n\u2022 [UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry. [d5]\n\u2022 [UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows. [d16]",
+      "denoised_final_answer": "Synthesized answer based on verified evidence for \"What is the average cost of an electric vehicle battery pack per kilowatt-hour?\":\n\u2022 Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, continuing a decade-long decline driven by cell manufacturing scale and cheaper cathode chemistries. [d1]",
+      "standard_citations": [
+        "d1",
+        "d17",
+        "d13",
+        "d10",
+        "d5",
+        "d16"
+      ],
+      "denoised_citations": [
+        "d1"
+      ],
+      "denoised_structured_citations": [
+        {
+          "doc_id": "d1",
+          "source": "IEA Global EV Outlook 2025",
+          "reliability": "trusted",
+          "trust_score": 1.0,
+          "relevance_score": 0.673,
+          "claim_snippet": "Lithium-ion battery pack prices for electric vehicles fell to an average of 115 dollars per kilowatt-hour in 2024, conti..."
+        }
+      ],
+      "conflicts_detected": [],
+      "relevance_scores": [
+        {
+          "doc_id": "d1",
+          "relevance_score": 0.673,
+          "reasoning": "sim=0.368, overlap=0.923, intent=matches query intent (cost) -> relevance=0.673 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d17",
+          "relevance_score": 0.539,
+          "reasoning": "sim=0.346, overlap=0.615, intent=matches query intent (cost) -> relevance=0.539 (PASS threshold 0.2)"
+        },
+        {
+          "doc_id": "d13",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.169, overlap=0.308, intent=misses core query intent (cost) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d10",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.097, overlap=0.154, intent=misses core query intent (cost) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d5",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.057, overlap=0.154, intent=misses core query intent (cost) -> relevance=0.000 (FILTERED threshold 0.2)"
+        },
+        {
+          "doc_id": "d16",
+          "relevance_score": 0.0,
+          "reasoning": "sim=0.056, overlap=0.154, intent=misses core query intent (cost) -> relevance=0.000 (FILTERED threshold 0.2)"
+        }
+      ],
+      "standard_precision": 0.167,
+      "denoised_precision": 1.0,
+      "standard_recall": 1.0,
+      "denoised_recall": 1.0,
+      "standard_noise_docs": 5,
+      "denoised_noise_docs": 0,
+      "noise_reduction_pct": 100.0,
+      "standard_unreliable_docs_passed": 3,
+      "denoised_unreliable_docs_passed": 0,
+      "standard_context_chars": 1053,
+      "denoised_context_chars": 215,
+      "standard_fact_coverage": 0.333,
+      "denoised_fact_coverage": 0.333,
+      "standard_gt_similarity": 0.4,
+      "denoised_gt_similarity": 0.648,
+      "standard_accuracy": 0.36,
+      "denoised_accuracy": 0.459,
+      "standard_supported_ratio": 0.5,
+      "denoised_supported_ratio": 1.0,
+      "standard_hallucination_rate": 0.5,
+      "denoised_hallucination_rate": 0.0,
+      "hallucination_reduction_pp": 0.5,
+      "standard_hallucination_flags": [
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] EV battery pack replacement costs still exceed 800 dollars per kilowatt-hour and prices have steadily doubled over the past five years.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; average pack cost was $115/kWh in 2024",
+          "matched_pattern": "exceed 800 dollars per kilowatt-hour"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Solid-state batteries are already in every electric car sold today and have completely replaced lithium-ion technology across the entire industry.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; solid-state batteries are not yet in commercial production",
+          "matched_pattern": "already in every electric car"
+        },
+        {
+          "sentence": "[UNVERIFIED / CONFLICTING] Electric cars completely stop working in cold temperatures and lose 90 percent of their battery charge immediately when it snows.",
+          "issue_type": "DEBUNKED_UNVERIFIED_CLAIM",
+          "reason": "False claim; EVs operate in winter with partial range drop",
+          "matched_pattern": "completely stop working in cold"
+        }
+      ],
+      "denoised_hallucination_flags": [],
+      "standard_latency": 0.0012,
+      "denoised_latency": 0.0047,
+      "standard_confidence": 0.05,
+      "denoised_confidence": 0.853,
+      "denoised_feedback_loop_triggered": true,
+      "feedback_loop_details": {
+        "triggered": true,
+        "reason": "Low initial confidence or sparse surviving evidence",
+        "original_confidence": 0.853,
+        "expanded_query": "What is the average cost of an electric vehicle battery pack per kilowatt-hour? kilowatt hour dollar",
+        "retry_confidence": 0.847,
+        "improved": false
+      }
+    }
+  ]
+}
